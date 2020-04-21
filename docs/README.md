@@ -1,4 +1,4 @@
-# \${PROJECT_NAME}
+# loopback-component-history
 
 ## Product Owner
 
@@ -10,15 +10,15 @@
 
 ## Start Date (UTC)
 
--   \${PROJECT_DATE}
+-   2020-04-21T12:38:17.431Z
 
 ## Question
 
--   \${PROJECT_QUESTION}
+-   How to save data history
 
 ## Goal
 
--   \${PROJECT_GOAL}
+-   Saving data states history
 
 ## License
 
@@ -28,14 +28,9 @@
 
 ## Languages and Frameworks
 
-1. **Client**
-    1. **HTML5**
-    2. **CSS3**
-    3. **JavaScript-ES7**
-    4. **React.js**
-2. **Server**
+1. **Server**
     1. **Node.js**
-    2. **Express.js**
+    2. **Loopback 4**
 
 ## SDLC (Software Development Life Cycle)
 
@@ -43,7 +38,6 @@
 
 ## Links
 
-[Zoho Sprints]()
-[Gitlab]()
+[Github](https://github.com/loopback4/loopback-component-history)
 
 ## Description

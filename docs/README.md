@@ -4,7 +4,7 @@
 
 -   [KoLiBer](https://koliber.ir)
 
-## Developers
+## Contributions
 
 1. [KoLiBer](https://koliber.ir)
 
@@ -19,12 +19,6 @@
 ## Goal
 
 -   Saving data states history
-
-## License
-
--   Project is under **[MIT](LICENSE.md)** license
-
-![MIT License](https://pre00.deviantart.net/4938/th/pre/f/2016/070/3/b/mit_license_logo_by_excaliburzero-d9ur2lg.png)
 
 ## Languages and Frameworks
 

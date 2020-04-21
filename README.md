@@ -1,4 +1,4 @@
-# loopback-history-extension
+# loopback-component-history
 
 Saving history of `Create`, `Update`, `Delete` of a table sometimes is a big problem in data model design level.
 
@@ -20,7 +20,7 @@ Now, using this simple extension you can add all history features to your models
 ## Installation
 
 ```bash
-npm i --save loopback-history-extension
+npm i --save loopback-component-history
 ```
 
 ---
@@ -61,7 +61,7 @@ export class User extends Entity {
 To:
 
 ```ts
-import { HistoryEntity } from "loopback-history-extension";
+import { HistoryEntity } from "loopback-component-history";
 
 @model()
 export class User extends HistoryEntity {
@@ -133,7 +133,7 @@ export class UserRepository extends DefaultCrudRepository<
 To:
 
 ```ts
-import { HistoryCrudRepositoryMixin } from "loopback-history-extension";
+import { HistoryCrudRepositoryMixin } from "loopback-component-history";
 
 export class UserRepository extends HistoryCrudRepositoryMixin<
     User,

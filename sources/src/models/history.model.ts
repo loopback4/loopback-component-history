@@ -1,31 +1,28 @@
 import { Entity, model, property } from "@loopback/repository";
 
-@model({ settings: {} })
+@model()
 export class HistoryEntity extends Entity {
     @property({
         type: "string",
-        id: true,
-        required: true,
         defaultFn: "uuidv4",
+        id: true,
     })
     uid: string;
 
     @property({
         type: "date",
-        required: true,
-        defaultFn: "$now",
+        defaultFn: "now",
     })
     beginDate: Date;
 
     @property({
         type: "date",
-        defaultFn: "$now",
+        defaultFn: "now",
     })
     endDate: Date;
 
     @property({
         type: "string",
-        required: true,
         defaultFn: "uuidv4",
     })
     id: string;

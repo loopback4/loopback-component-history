@@ -100,7 +100,7 @@ At the sixth level we should do these items :
 
 1. `docs`
 2. `sources`
-    1. `build`
+    1. `build/dist`
     2. `lib`
     3. `public`
     4. `private`
@@ -109,6 +109,8 @@ At the sixth level we should do these items :
     7. `.gitignore`
 3. `.gitignore`
 4. `README.md`
+5. `LICENSE.md`
+6. `CHANGELOG.md`
 
 #### Example
 
@@ -252,21 +254,6 @@ ssh-keygen -t rsa
 
 ---
 
-#### Proxy
-
-```bash
-sudo apt install tor
-```
-
-`~/.ssh/config`: Add tor proxy for gitlab ssh links
-
-```
-Host gitlab.com
-	ProxyCommand nc -x localhost:9050 %h %p
-```
-
----
-
 ### Git Install
 
 ```bash
@@ -279,21 +266,15 @@ sudo apt install git git-flow
 ### Git Project Configs
 
 ```bash
-git init
+git clone {git repository}
+cd {git repository}
 git flow init
+git clone git@gitlab.com:ckoliber/KPS.git
 
 git config user.name "{your name}"
 git config user.email "{your email}"
 git config core.editor code
 git config core.autocrlf input
-
-git clone git@gitlab.com:ckoliber/KPS.git -b base
-git clone git@gitlab.com:ckoliber/KPS.git -b {X}
-
-// change dir struct
-
-git remote add {remote name} [{ssh url}]
-git push --set-upstream {remote name} master --all
 ```
 
 ---
@@ -305,8 +286,9 @@ git push --set-upstream {remote name} master --all
 **installing**:
 
 ```bash
-sudo apt install python-pip
-sudo pip install mkdocs mkdocs-material
+sudo apt install python3-pip
+sudo pip3 install mkdocs mkdocs-material
+
 cd {project name}
 mkdocs new docs
 ```
@@ -344,6 +326,8 @@ mkdocs new docs
 4. style    =>  linting, formatting
 5. build    =>  build, dependency, library
 6. test     =>  add, check tests
+7. clean    =>  clean project source
+8. refactor =>  refactor project source
 
 feat: allow provided config object to extend other configs
 
@@ -374,7 +358,7 @@ fix: minor typos in code
 
 ###### X (Major)
 
-> Shows the big release number
+> Shows the big release number, not compatible with old versions
 
 ###### Y (Minor)
 

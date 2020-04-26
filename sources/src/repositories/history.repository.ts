@@ -59,6 +59,47 @@ export function HistoryCrudRepositoryMixin<
             }
 
             /**
+             * Check unique methods
+             */
+            private async checkUnique(
+                entities: DataObject<Model>[],
+                mode: "CREATE" | "UPDATE"
+            ) {
+                const uniqueFields = Object.entries(
+                    HistoryEntity.definition.properties
+                )
+                    .filter(([_, definition]) => definition.unique)
+                    .map(([fieldName, _]) => fieldName);
+
+                if (uniqueFields.length > 0) {
+                    const items = await this.find({
+                        where: {
+                            or: uniqueFields.map<any>((uniqueField) => ({
+                                [uniqueField]: {
+                                    inq: entities
+                                        .filter(
+                                            (entity) => uniqueField in entity
+                                        )
+                                        .map(
+                                            (entity: any) => entity[uniqueField]
+                                        ),
+                                },
+                            })),
+                        },
+                    });
+
+                    if (items.length > 0) {
+                        throw new HttpErrors.Conflict(
+                            `Conflict with unique fields: ${getUniqueFields(
+                                ctor,
+                                models
+                            )}`
+                        );
+                    }
+                }
+            }
+
+            /**
              * Create methods
              */
             private async createHistory(
@@ -90,6 +131,8 @@ export function HistoryCrudRepositoryMixin<
                     return super.create(entity, options);
                 }
 
+                await this.checkUnique([entity], "CREATE");
+
                 return (await this.createHistory([entity], options))[0];
             }
 
@@ -100,6 +143,8 @@ export function HistoryCrudRepositoryMixin<
                 if (options && options.crud) {
                     return super.createAll(entities, options);
                 }
+
+                await this.checkUnique(entities, "CREATE");
 
                 return await this.createHistory(entities, options);
             }

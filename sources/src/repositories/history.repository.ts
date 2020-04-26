@@ -71,6 +71,34 @@ export function HistoryCrudRepositoryMixin<
                     .filter(([_, definition]) => definition.unique)
                     .map(([fieldName, _]) => fieldName);
 
+                const entitiesUniqueFields = uniqueFields
+                    .map((fieldName) =>
+                        entities.map<string>((entity: any) => entity[fieldName])
+                    )
+                    .filter((field) => field);
+
+                const entitiesHasDuplicateUniqueFields = entitiesUniqueFields.map(
+                    (fields) =>
+                        Object.values(
+                            fields.reduce<{ [key: string]: number }>(
+                                (prev, item) => ({
+                                    ...prev,
+                                    [item]: (prev.item || 0) + 1,
+                                }),
+                                {}
+                            )
+                        ).filter((fieldsCount) => fieldsCount > 1).length > 0
+                );
+
+                const hasDuplicateUniqueField = entitiesHasDuplicateUniqueFields.reduce(
+                    (prev, hasDuplicate) => prev || hasDuplicate,
+                    false
+                );
+
+                if (hasDuplicateUniqueField) {
+                    throw new Error("Duplicate unique field");
+                }
+
                 if (uniqueFields.length > 0) {
                     const items = await this.find({
                         where: {

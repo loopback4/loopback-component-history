@@ -61,10 +61,11 @@ export function HistoryCrudRepositoryMixin<
             /**
              * Check unique methods
              */
-            private async checkUnique(
-                entities: DataObject<Model>[],
-                mode: "CREATE" | "UPDATE"
-            ) {
+            private async checkUnique(entities: DataObject<Model>[]) {
+                /**
+                 * 1. Check entities has not duplicate unique fields
+                 * 2. Check models doesn't have same unique fields
+                 */
                 const uniqueFields = Object.entries(
                     HistoryEntity.definition.properties
                 )

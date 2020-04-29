@@ -1,7 +1,6 @@
 import { Entity } from "@loopback/repository";
 
 export class EntityUniqueConflictError<
-    ID,
     Props extends object = {}
 > extends Error {
     code: string;

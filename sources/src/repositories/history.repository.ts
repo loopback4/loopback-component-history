@@ -11,8 +11,8 @@ import {
 } from "@loopback/repository";
 
 import { Ctor } from "../types";
-import { EntityUniqueConflictError } from "../errors";
 
+import { EntityUniqueConflictError } from "../errors";
 import { HistoryEntity, HistoryEntityRelations } from "../models";
 
 export interface HistoryOptions extends Options {

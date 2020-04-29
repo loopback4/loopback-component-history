@@ -81,7 +81,7 @@ export class User extends HistoryEntity {
 
 #### Tip
 
-Don't use `unique` columns in your models
+Don't use `unique` indexes in your models, instead add `unique` property to model definition
 
 Convert your model from:
 
@@ -105,6 +105,7 @@ export class User extends HistoryEntity {
     @property({
         type: "string",
         required: true,
+        unique: true,
     })
     username: string;
 }

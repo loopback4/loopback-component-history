@@ -11,6 +11,7 @@ import {
 } from "@loopback/repository";
 
 import { Ctor } from "../types";
+import { EntityUniqueConflictError } from "../errors";
 
 import { HistoryEntity, HistoryEntityRelations } from "../models";
 
@@ -59,70 +60,78 @@ export function HistoryCrudRepositoryMixin<
             }
 
             /**
-             * Check unique methods
+             * Check unique create
              */
-            private async checkUnique(entities: DataObject<Model>[]) {
+            private async createUnique(entities: DataObject<Model>[]) {
                 /**
-                 * 1. Check entities has not duplicate unique fields
-                 * 2. Check models doesn't have same unique fields
+                 * 1. duplicate(unique(x),unique(y),unique(z)) == false
                  */
-                const uniqueFields = Object.entries(
-                    HistoryEntity.definition.properties
+                const modelUniquesFields = Object.entries(
+                    this.entityClass.definition.properties
                 )
                     .filter(([_, definition]) => definition.unique)
                     .map(([fieldName, _]) => fieldName);
 
-                const entitiesUniqueFields = uniqueFields
+                const entitiesUniquesFields = modelUniquesFields
                     .map((fieldName) =>
                         entities.map<string>((entity: any) => entity[fieldName])
                     )
                     .filter((field) => field);
 
-                const entitiesHasDuplicateUniqueFields = entitiesUniqueFields.map(
-                    (fields) =>
-                        Object.values(
-                            fields.reduce<{ [key: string]: number }>(
-                                (prev, item) => ({
-                                    ...prev,
-                                    [item]: (prev.item || 0) + 1,
-                                }),
-                                {}
-                            )
-                        ).filter((fieldsCount) => fieldsCount > 1).length > 0
-                );
+                const hasDuplicateUniqueFields = entitiesUniquesFields
+                    .map(
+                        (fields) =>
+                            Object.values(
+                                fields.reduce<{ [key: string]: number }>(
+                                    (prev, item) => ({
+                                        ...prev,
+                                        [item]: (prev.item || 0) + 1,
+                                    }),
+                                    {}
+                                )
+                            ).filter((fieldsCount) => fieldsCount > 1).length >
+                            0
+                    )
+                    .reduce(
+                        (prev, hasDuplicate) => prev || hasDuplicate,
+                        false
+                    );
 
-                const hasDuplicateUniqueField = entitiesHasDuplicateUniqueFields.reduce(
-                    (prev, hasDuplicate) => prev || hasDuplicate,
-                    false
-                );
-
-                if (hasDuplicateUniqueField) {
-                    throw new Error("Duplicate unique field");
+                if (hasDuplicateUniqueFields) {
+                    throw new EntityUniqueConflictError(
+                        this.entityClass,
+                        modelUniquesFields
+                    );
                 }
 
-                if (uniqueFields.length > 0) {
-                    const items = await this.find({
-                        where: {
-                            or: uniqueFields.map<any>((uniqueField) => ({
-                                [uniqueField]: {
-                                    inq: entities
-                                        .filter(
-                                            (entity) => uniqueField in entity
-                                        )
-                                        .map(
-                                            (entity: any) => entity[uniqueField]
-                                        ),
-                                },
-                            })),
-                        },
+                /**
+                 * 2. count(and: [
+                 *          {endDate:null},
+                 *          {or: [unique(x),unique(y),unique(z)]}
+                 *    ]) == 0
+                 */
+                const uniqueConditions = modelUniquesFields
+                    .map((fieldName, index) => ({
+                        fieldName: fieldName,
+                        fields: entitiesUniquesFields[index],
+                    }))
+                    .filter(({ fields }) => fields.length > 0)
+                    .map(({ fieldName, fields }) => ({
+                        [fieldName]: { inq: fields },
+                    }));
+
+                if (uniqueConditions.length > 0) {
+                    const uniqueFieldsCount = await super.count({
+                        and: [
+                            { endDate: null },
+                            { or: uniqueConditions },
+                        ] as any,
                     });
 
-                    if (items.length > 0) {
-                        throw new HttpErrors.Conflict(
-                            `Conflict with unique fields: ${getUniqueFields(
-                                ctor,
-                                models
-                            )}`
+                    if (uniqueFieldsCount.count > 0) {
+                        throw new EntityUniqueConflictError(
+                            this.entityClass,
+                            modelUniquesFields
                         );
                     }
                 }
@@ -160,7 +169,7 @@ export function HistoryCrudRepositoryMixin<
                     return super.create(entity, options);
                 }
 
-                await this.checkUnique([entity], "CREATE");
+                await this.createUnique([entity]);
 
                 return (await this.createHistory([entity], options))[0];
             }
@@ -173,7 +182,7 @@ export function HistoryCrudRepositoryMixin<
                     return super.createAll(entities, options);
                 }
 
-                await this.checkUnique(entities, "CREATE");
+                await this.createUnique(entities);
 
                 return await this.createHistory(entities, options);
             }
@@ -404,6 +413,64 @@ export function HistoryCrudRepositoryMixin<
             }
 
             /**
+             * Check unique update
+             */
+            private async updateUnique(data: DataObject<Model>, where: Where) {
+                /**
+                 * 1. count(and: [
+                 *          {endDate:null},
+                 *          unique(x)
+                 *    ]) == 0
+                 */
+                const modelUniquesFields = Object.entries(
+                    this.entityClass.definition.properties
+                )
+                    .filter(([_, definition]) => definition.unique)
+                    .map(([fieldName, _]) => fieldName);
+
+                const uniqueConditions = modelUniquesFields
+                    .map((fieldName) => ({
+                        fieldName: fieldName,
+                        field: (data as any)[fieldName],
+                    }))
+                    .filter(({ field }) => field)
+                    .map(({ fieldName, field }) => ({
+                        [fieldName]: field,
+                    }));
+
+                if (uniqueConditions.length > 0) {
+                    const uniqueFieldsCount = await super.count({
+                        and: [
+                            { endDate: null },
+                            { or: uniqueConditions },
+                        ] as any,
+                    });
+
+                    if (uniqueFieldsCount.count > 0) {
+                        throw new EntityUniqueConflictError(
+                            this.entityClass,
+                            modelUniquesFields
+                        );
+                    }
+                }
+
+                /**
+                 * 2. if (count(and: [
+                 *          {endDate: null},
+                 *          where
+                 *    ]) > 1) => unique(x).length == 0
+                 */
+                const targetCount = await super.count(where as any);
+
+                if (targetCount.count > 1 && modelUniquesFields.length > 0) {
+                    throw new EntityUniqueConflictError(
+                        this.entityClass,
+                        modelUniquesFields
+                    );
+                }
+            }
+
+            /**
              * Update methods
              */
             private async updateHistory(
@@ -462,6 +529,8 @@ export function HistoryCrudRepositoryMixin<
                     endDate: null,
                 };
 
+                await this.updateUnique(entity, historyFilter);
+
                 await this.updateHistory(entity, false, historyFilter, options);
             }
 
@@ -481,6 +550,8 @@ export function HistoryCrudRepositoryMixin<
                 } else {
                     historyFilter = { endDate: null };
                 }
+
+                await this.updateUnique(data, historyFilter);
 
                 return await this.updateHistory(
                     data,
@@ -505,6 +576,8 @@ export function HistoryCrudRepositoryMixin<
                     endDate: null,
                 };
 
+                await this.updateUnique(data, historyFilter);
+
                 await this.updateHistory(data, false, historyFilter, options);
             }
 
@@ -522,6 +595,8 @@ export function HistoryCrudRepositoryMixin<
                     id: id,
                     endDate: null,
                 };
+
+                await this.updateUnique(data, historyFilter);
 
                 await this.updateHistory(data, true, historyFilter, options);
             }

@@ -1,18 +1,16 @@
-// Copyright IBM Corp. 2018,2019. All Rights Reserved.
-// Node module: @loopback/repository
-// This file is licensed under the MIT License.
-// License text available at https://opensource.org/licenses/MIT
-
 import { Entity } from "@loopback/repository";
 
-export class EntityNotFoundError<ID, Props extends object = {}> extends Error {
+export class EntityUniqueConflictError<
+    ID,
+    Props extends object = {}
+> extends Error {
     code: string;
     entityName: string;
-    entityId: ID;
+    entityUniqueFields: string[];
 
     constructor(
         entityOrName: typeof Entity | string,
-        entityId: ID,
+        entityUniqueFields: string[],
         extraProperties?: Props
     ) {
         const entityName =
@@ -21,17 +19,14 @@ export class EntityNotFoundError<ID, Props extends object = {}> extends Error {
                 : entityOrName.modelName || entityOrName.name;
 
         super(
-            `Conflict ${entityName} with unique fields: ${getUniqueFields(
-                ctor,
-                models
-            )}`
+            `Conflict ${entityName} with unique fields: ${entityUniqueFields}`
         );
 
         Error.captureStackTrace(this, this.constructor);
 
         this.code = "ENTITY_UNIQUE_CONFLICT";
         this.entityName = entityName;
-        this.entityId = entityId;
+        this.entityUniqueFields = entityUniqueFields;
 
         Object.assign(this, extraProperties);
     }

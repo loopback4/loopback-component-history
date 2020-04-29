@@ -24,7 +24,6 @@ export class HistoryEntity extends Entity {
     @property({
         type: "string",
         defaultFn: "uuidv4",
-        unique: true,
     })
     id: string;
 

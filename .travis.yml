@@ -11,4 +11,4 @@ deploy:
     email: koliberr136a1@gmail.com
     api_key: $NPM_TOKEN
     on:
-        tags: true
+        branch: develop

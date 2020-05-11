@@ -1,5 +1,7 @@
 # loopback-component-history
 
+[![Build Status](https://travis-ci.com/loopback4/loopback-component-history.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-history)
+
 Saving history of `Create`, `Update`, `Delete` of a table sometimes is a big problem in data model design level.
 
 A good approach for saving history is about adding some columns to your tables:

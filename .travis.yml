@@ -2,7 +2,7 @@ language: node_js
 node_js:
     - node
 
-before_script: cd sources/
+before_install: cd sources/
 script:
     - npm run build
     - npm run test

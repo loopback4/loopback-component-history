@@ -3,7 +3,9 @@ import { Entity } from "@loopback/repository";
 export class EntityUniqueConflictError<
     Props extends object = {}
 > extends Error {
-    code: string;
+    name: string;
+    message: string;
+    statusCode: number;
     entityName: string;
     entityUniqueFields: string[];
 
@@ -23,7 +25,9 @@ export class EntityUniqueConflictError<
 
         Error.captureStackTrace(this, this.constructor);
 
-        this.code = "ENTITY_UNIQUE_CONFLICT";
+        this.name = "ENTITY_UNIQUE_CONFLICT";
+        this.statusCode = 409;
+        this.message = `Conflict ${entityName} with unique fields: ${entityUniqueFields}`;
         this.entityName = entityName;
         this.entityUniqueFields = entityUniqueFields;
 

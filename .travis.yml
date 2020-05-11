@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+    - node
+
+install:
+    - npm install --prefix sources
+script:
+    - npm run build --prefix sources
+    - npm run test --prefix sources
+deploy:
+    provider: npm
+    email: "koliberr136a1@gmail.com"
+    api_key: $NPM_TOKEN
+    on:
+        tags: true

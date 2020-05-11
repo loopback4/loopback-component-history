@@ -3,6 +3,7 @@ node_js:
     - node
 
 before_install: cd sources/
+before_deploy: cd sources/
 script:
     - npm run build
     - npm run test

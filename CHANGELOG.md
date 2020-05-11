@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1
+
+-   **Fix**: ci file deploy stage to npm
+
 ## v0.4.0
 
 -   **Feat**: add `Travis CI` integration

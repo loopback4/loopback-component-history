@@ -2,5 +2,5 @@ language: node_js
 node_js:
     - node
 script:
-    - npm run build
-    - npm run test
+    - npm run build --prefix sources
+    - npm run test --prefix sources

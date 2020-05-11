@@ -3,13 +3,12 @@ node_js:
     - node
 
 before_install: cd sources/
-before_deploy: cd sources/
 script:
     - npm run build
     - npm run test
 deploy:
-    provider: npm
-    email: koliberr136a1@gmail.com
-    api_key: $NPM_TOKEN
+    provider: script
+    script:
+        - npm publish
     on:
         tags: true

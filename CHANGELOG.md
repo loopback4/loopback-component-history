@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.4.1
+## v0.5.0
 
 -   **Fix**: ci file deploy stage to npm
 

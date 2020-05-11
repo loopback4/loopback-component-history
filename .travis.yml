@@ -2,14 +2,14 @@ language: node_js
 node_js:
     - node
 
-install:
-    - npm install --prefix sources
+before_install: cd sources/
 script:
-    - npm run build --prefix sources
-    - npm run test --prefix sources
+    - npm run build
+    - npm run test
 deploy:
     provider: npm
-    email: "koliberr136a1@gmail.com"
+    email: koliberr136a1@gmail.com
     api_key: $NPM_TOKEN
+    skip_cleanup: true
     on:
         tags: true

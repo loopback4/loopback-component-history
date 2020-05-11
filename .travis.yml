@@ -9,6 +9,7 @@ script:
 deploy:
     provider: script
     script:
+        - npm install
         - npm publish
     on:
         branch: develop

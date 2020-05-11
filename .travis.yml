@@ -2,11 +2,11 @@ language: node_js
 node_js:
     - node
 
-install:
-    - npm install --prefix sources
+before_script:
+    - cd sources/
 script:
-    - npm run build --prefix sources
-    - npm run test --prefix sources
+    - npm run build
+    - npm run test
 deploy:
     provider: npm
     email: "koliberr136a1@gmail.com"

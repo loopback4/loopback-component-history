@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0
+
+-   **Feat**: add `Travis CI` integration
+-   **Feat**: add `Conflict Error` status code for http
+-   **Deps:**: update packages
+
 ## v0.3.0
 
 -   **Feat**: add `unique` property check for `Create`, `Update` methods

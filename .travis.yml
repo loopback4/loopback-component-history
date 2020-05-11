@@ -9,7 +9,7 @@ script:
     - npm run test
 deploy:
     provider: npm
-    email: "koliberr136a1@gmail.com"
+    email: koliberr136a1@gmail.com
     api_key: $NPM_TOKEN
     on:
         tags: true

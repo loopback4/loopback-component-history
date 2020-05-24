@@ -16,7 +16,7 @@ import { EntityUniqueConflictError } from "../errors";
 import { HistoryEntity, HistoryEntityRelations } from "../models";
 
 export interface HistoryOptions extends Options {
-    crud?: true;
+    history?: true;
     maxDate?: Date;
 }
 
@@ -165,7 +165,7 @@ export function HistoryCrudRepositoryMixin<
                 entity: DataObject<Model>,
                 options?: HistoryOptions
             ): Promise<Model> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.create(entity, options);
                 }
 
@@ -178,7 +178,7 @@ export function HistoryCrudRepositoryMixin<
                 entities: DataObject<Model>[],
                 options?: HistoryOptions
             ): Promise<Model[]> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.createAll(entities, options);
                 }
 
@@ -227,7 +227,7 @@ export function HistoryCrudRepositoryMixin<
                 filter?: Filter<Model>,
                 options?: HistoryOptions
             ): Promise<(Model & ModelRelations)[]> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.find(filter, options);
                 }
 
@@ -261,7 +261,7 @@ export function HistoryCrudRepositoryMixin<
                 filter?: Filter<Model>,
                 options?: HistoryOptions
             ): Promise<(Model & ModelRelations) | null> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.findOne(filter, options);
                 }
 
@@ -301,7 +301,7 @@ export function HistoryCrudRepositoryMixin<
                 filter?: Filter<Model>,
                 options?: HistoryOptions
             ): Promise<Model & ModelRelations> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.findById(id, filter, options);
                 }
 
@@ -349,7 +349,7 @@ export function HistoryCrudRepositoryMixin<
                 where?: Where<Model>,
                 options?: HistoryOptions
             ): Promise<Count> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.count(where, options);
                 }
 
@@ -385,7 +385,7 @@ export function HistoryCrudRepositoryMixin<
                 id: string,
                 options?: HistoryOptions
             ): Promise<boolean> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.exists(id, options);
                 }
 
@@ -519,7 +519,7 @@ export function HistoryCrudRepositoryMixin<
                 entity: Model,
                 options?: HistoryOptions
             ): Promise<void> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.update(entity, options);
                 }
 
@@ -539,7 +539,7 @@ export function HistoryCrudRepositoryMixin<
                 where?: Where<Model>,
                 options?: HistoryOptions
             ): Promise<Count> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.updateAll(data, where, options);
                 }
 
@@ -566,7 +566,7 @@ export function HistoryCrudRepositoryMixin<
                 data: DataObject<Model>,
                 options?: HistoryOptions
             ): Promise<void> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.updateById(id, data, options);
                 }
 
@@ -586,7 +586,7 @@ export function HistoryCrudRepositoryMixin<
                 data: DataObject<Model>,
                 options?: HistoryOptions
             ): Promise<void> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.replaceById(id, data, options);
                 }
 
@@ -623,7 +623,7 @@ export function HistoryCrudRepositoryMixin<
                 entity: Model,
                 options?: HistoryOptions
             ): Promise<void> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.delete(entity, options);
                 }
 
@@ -640,7 +640,7 @@ export function HistoryCrudRepositoryMixin<
                 where?: Where<Model>,
                 options?: HistoryOptions
             ): Promise<Count> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.deleteAll(where, options);
                 }
 
@@ -659,7 +659,7 @@ export function HistoryCrudRepositoryMixin<
                 id: string,
                 options?: HistoryOptions
             ): Promise<void> {
-                if (options && options.crud) {
+                if (options && options.history) {
                     return super.deleteById(id, options);
                 }
 

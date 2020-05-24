@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0
+
+-   **Feat**: enable unit testing by `ts-node`
+-   **Fix**: change name `HistoryCrudRepository` to `HistoryRepository`
+-   **Fix**: change option name `crud` to `history`
+-   **Deps**: update packages
+
 ## v0.5.0
 
 -   **Fix**: ci file deploy stage to npm

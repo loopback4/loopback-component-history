@@ -117,7 +117,7 @@ export class User extends HistoryEntity {
 
 ### History Repository Mixin
 
-Change your repository parent class from `DefaultCrudRepository` to `HistoryCrudRepositoryMixin()()`
+Change your repository parent class from `DefaultCrudRepository` to `HistoryRepositoryMixin()()`
 
 #### Example
 
@@ -136,9 +136,9 @@ export class UserRepository extends DefaultCrudRepository<
 To:
 
 ```ts
-import { HistoryCrudRepositoryMixin } from "loopback-component-history";
+import { HistoryRepositoryMixin } from "loopback-component-history";
 
-export class UserRepository extends HistoryCrudRepositoryMixin<
+export class UserRepository extends HistoryRepositoryMixin<
     User,
     UserRelations
 >()() {

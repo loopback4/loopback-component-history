@@ -1,6 +1,6 @@
 {
     "name": "loopback-component-history",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Loopback component models history",
     "keywords": [
         "loopback-extension",
@@ -33,18 +33,18 @@
         "dist"
     ],
     "dependencies": {
-        "@loopback/boot": "^2.3.1",
-        "@loopback/context": "^3.8.1",
-        "@loopback/core": "^2.7.0",
-        "@loopback/repository": "^2.5.1",
-        "tslib": "^1.10.0"
+        "@loopback/boot": "^2.3.2",
+        "@loopback/context": "^3.8.2",
+        "@loopback/core": "^2.7.1",
+        "@loopback/repository": "^2.6.0",
+        "tslib": "^2.0.0"
     },
     "devDependencies": {
-        "@loopback/build": "^5.4.1",
-        "@loopback/testlab": "^3.1.5",
+        "@loopback/build": "^5.4.2",
+        "@loopback/testlab": "^3.1.6",
         "@types/node": "^10.17.24",
         "nodemon": "^2.0.4",
-        "ts-node": "^8.10.1",
+        "ts-node": "^8.10.2",
         "typescript": "~3.9.3"
     }
 }

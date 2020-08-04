@@ -66,41 +66,38 @@ export function HistoryRepositoryMixin<
                 /**
                  * 1. duplicate(unique(x),unique(y),unique(z)) == false
                  */
-                const modelUniquesFields = Object.entries(
+                const modelUniqueFields = Object.entries(
                     this.entityClass.definition.properties
                 )
                     .filter(([_, definition]) => definition.unique)
                     .map(([fieldName, _]) => fieldName);
 
-                const entitiesUniquesFields = modelUniquesFields
+                const entitiesUniqueFields = modelUniqueFields
                     .map((fieldName) =>
                         entities.map<string>((entity: any) => entity[fieldName])
                     )
                     .filter((field) => field);
 
-                const hasDuplicateUniqueFields = entitiesUniquesFields
+                const hasDuplicateUniqueFields = entitiesUniqueFields
                     .map(
                         (fields) =>
                             Object.values(
                                 fields.reduce<{ [key: string]: number }>(
-                                    (prev, item) => ({
-                                        ...prev,
-                                        [item]: (prev.item || 0) + 1,
+                                    (acc, item) => ({
+                                        ...acc,
+                                        [item]: (acc.item || 0) + 1,
                                     }),
                                     {}
                                 )
                             ).filter((fieldsCount) => fieldsCount > 1).length >
                             0
                     )
-                    .reduce(
-                        (prev, hasDuplicate) => prev || hasDuplicate,
-                        false
-                    );
+                    .reduce((acc, hasDuplicate) => acc || hasDuplicate, false);
 
                 if (hasDuplicateUniqueFields) {
                     throw new EntityUniqueConflictError(
                         this.entityClass,
-                        modelUniquesFields
+                        modelUniqueFields
                     );
                 }
 
@@ -110,10 +107,10 @@ export function HistoryRepositoryMixin<
                  *          {or: [unique(x),unique(y),unique(z)]}
                  *    ]) == 0
                  */
-                const uniqueConditions = modelUniquesFields
+                const uniqueConditions = modelUniqueFields
                     .map((fieldName, index) => ({
                         fieldName: fieldName,
-                        fields: entitiesUniquesFields[index],
+                        fields: entitiesUniqueFields[index],
                     }))
                     .filter(({ fields }) => fields.length > 0)
                     .map(({ fieldName, fields }) => ({
@@ -131,7 +128,7 @@ export function HistoryRepositoryMixin<
                     if (uniqueFieldsCount.count > 0) {
                         throw new EntityUniqueConflictError(
                             this.entityClass,
-                            modelUniquesFields
+                            modelUniqueFields
                         );
                     }
                 }
@@ -422,13 +419,13 @@ export function HistoryRepositoryMixin<
                  *          unique(x)
                  *    ]) == 0
                  */
-                const modelUniquesFields = Object.entries(
+                const modelUniqueFields = Object.entries(
                     this.entityClass.definition.properties
                 )
                     .filter(([_, definition]) => definition.unique)
                     .map(([fieldName, _]) => fieldName);
 
-                const uniqueConditions = modelUniquesFields
+                const uniqueConditions = modelUniqueFields
                     .map((fieldName) => ({
                         fieldName: fieldName,
                         field: (data as any)[fieldName],
@@ -449,7 +446,7 @@ export function HistoryRepositoryMixin<
                     if (uniqueFieldsCount.count > 0) {
                         throw new EntityUniqueConflictError(
                             this.entityClass,
-                            modelUniquesFields
+                            modelUniqueFields
                         );
                     }
                 }
@@ -462,10 +459,10 @@ export function HistoryRepositoryMixin<
                  */
                 const targetCount = await super.count(where as any);
 
-                if (targetCount.count > 1 && modelUniquesFields.length > 0) {
+                if (targetCount.count > 1 && modelUniqueFields.length > 0) {
                     throw new EntityUniqueConflictError(
                         this.entityClass,
-                        modelUniquesFields
+                        modelUniqueFields
                     );
                 }
             }

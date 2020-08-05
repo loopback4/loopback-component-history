@@ -1,6 +1,9 @@
 # loopback-component-history
 
-[![Build Status](https://travis-ci.com/loopback4/loopback-component-history.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-history)
+![Travis (.org) branch](https://img.shields.io/travis/loopback4/loopback-component-history/master)
+![npm](https://img.shields.io/npm/v/loopback-component-history)
+![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-history)
+![GitHub](https://img.shields.io/github/license/loopback4/loopback-component-history)
 
 Saving history of `Create`, `Update`, `Delete` of a table sometimes is a big problem in data model design level.
 
@@ -156,5 +159,5 @@ export class UserRepository extends HistoryRepositoryMixin<
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE.md).  
+This project is licensed under the [MIT license](LICENSE.md).
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)

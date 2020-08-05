@@ -1,4 +1,4 @@
-import { MixinTarget, Constructor } from "@loopback/core";
+import { MixinTarget } from "@loopback/core";
 import {
     DefaultCrudRepository,
     DataObject,
@@ -6,12 +6,7 @@ import {
     Filter,
     FilterExcludingWhere,
     Where,
-    EntityNotFoundError,
-    Model,
-    Entity,
 } from "@loopback/repository";
-
-import { Ctor } from "../types";
 
 import { EntityUniqueConflictError } from "../errors";
 import { HistoryEntity, HistoryEntityRelations } from "../models";
@@ -31,7 +26,7 @@ export interface HistoryRepository<
 }
 
 /**
- * Repository Mixin
+ * History repository mixin, add CRUD operations supporting history
  */
 export function HistoryRepositoryMixin<
     T extends HistoryEntity,
@@ -42,109 +37,74 @@ export function HistoryRepositoryMixin<
     >(superClass: R) {
         class MixedRepository extends superClass
             implements HistoryRepository<T, Relations> {
+            /**
+             * Find ctor unique columns
+             * then get entities unique columns values
+             * for each unique column, values pair check duplicated values are not existed
+             * check the values with column, values pair where count is 0
+             * if where existed (update), check updatable count is not more than 1
+             */
             isUnique = async (entities: DataObject<T>[], where?: Where<T>) => {
                 const ctorUniqueFields = Object.entries(
                     this.entityClass.definition.properties
                 )
-                    .filter(
-                        ([_, definition]) => this.entityClass.definition.unique
-                    )
+                    .filter(([_, definition]) => definition.unique)
                     .map(([fieldName, _]) => fieldName);
 
                 const entitiesUniqueFields = ctorUniqueFields
-                    .map((fieldName) =>
-                        entities.map<string>((entity: any) => entity[fieldName])
-                    )
-                    .filter((field) => field);
+                    .map((fieldName) => ({
+                        field: fieldName,
+                        items: entities
+                            .map<string>((entity: any) => entity[fieldName])
+                            .filter((item) => item),
+                    }))
+                    .filter(({ items }) => items.length > 0);
 
-                // const hasDuplicateUniqueFields = entitiesUniqueFields
-                //     .map(
-                //         (fields) =>
-                //             Object.values(
-                //                 fields.reduce<{ [key: string]: number }>(
-                //                     (prev, item) => ({
-                //                         ...prev,
-                //                         [item]: (prev.item || 0) + 1,
-                //                     }),
-                //                     {}
-                //                 )
-                //             ).filter((fieldsCount) => fieldsCount > 1).length > 0
-                //     )
-                //     .reduce((prev, hasDuplicate) => prev || hasDuplicate, false);
+                if (entitiesUniqueFields.length <= 0) {
+                    return;
+                }
 
-                // if (hasDuplicateUniqueFields) {
-                //     throw new EntityUniqueConflictError(
-                //         this.entityClass,
-                //         modelUniquesFields
-                //     );
-                // }
+                for (let { field, items } of entitiesUniqueFields) {
+                    if (new Set(items).size !== items.length) {
+                        throw new EntityUniqueConflictError(
+                            this.entityClass,
+                            field
+                        );
+                    }
+                }
 
-                // /**
-                //  * 2. count(and: [
-                //  *          {endDate:null},
-                //  *          {or: [unique(x),unique(y),unique(z)]}
-                //  *    ]) == 0
-                //  */
-                // const uniqueConditions = modelUniquesFields
-                //     .map((fieldName, index) => ({
-                //         fieldName: fieldName,
-                //         fields: entitiesUniquesFields[index],
-                //     }))
-                //     .filter(({ fields }) => fields.length > 0)
-                //     .map(({ fieldName, fields }) => ({
-                //         [fieldName]: { inq: fields },
-                //     }));
+                const entitiesUniqueFieldsWhere: any = {
+                    and: [
+                        { endDate: null },
+                        {
+                            or: entitiesUniqueFields.map(
+                                ({ field, items }) => ({
+                                    [field]: { inq: items },
+                                })
+                            ),
+                        },
+                    ],
+                };
 
-                // if (uniqueConditions.length > 0) {
-                //     const uniqueFieldsCount = await super.count({
-                //         and: [{ endDate: null }, { or: uniqueConditions }] as any,
-                //     });
+                const conflicts = await super.count(entitiesUniqueFieldsWhere);
+                if (conflicts.count > 0) {
+                    throw new EntityUniqueConflictError(
+                        this.entityClass,
+                        entitiesUniqueFields.map(({ field }) => field).join(",")
+                    );
+                }
 
-                //     if (uniqueFieldsCount.count > 0) {
-                //         throw new EntityUniqueConflictError(
-                //             this.entityClass,
-                //             modelUniquesFields
-                //         );
-                //     }
-                // }
-
-                // const uniqueConditions = modelUniquesFields
-                //     .map((fieldName) => ({
-                //         fieldName: fieldName,
-                //         field: (data as any)[fieldName],
-                //     }))
-                //     .filter(({ field }) => field)
-                //     .map(({ fieldName, field }) => ({
-                //         [fieldName]: field,
-                //     }));
-
-                // if (uniqueConditions.length > 0) {
-                //     const uniqueFieldsCount = await super.count({
-                //         and: [{ endDate: null }, { or: uniqueConditions }] as any,
-                //     });
-
-                //     if (uniqueFieldsCount.count > 0) {
-                //         throw new EntityUniqueConflictError(
-                //             this.entityClass,
-                //             modelUniquesFields
-                //         );
-                //     }
-                // }
-
-                // /**
-                //  * 2. if (count(and: [
-                //  *          {endDate: null},
-                //  *          where
-                //  *    ]) > 1) => unique(x).length == 0
-                //  */
-                // const targetCount = await super.count(where as any);
-
-                // if (targetCount.count > 1 && modelUniquesFields.length > 0) {
-                //     throw new EntityUniqueConflictError(
-                //         this.entityClass,
-                //         modelUniquesFields
-                //     );
-                // }
+                if (where) {
+                    const updatables = await super.find({ where: where });
+                    if (updatables.length > 1) {
+                        throw new EntityUniqueConflictError(
+                            this.entityClass,
+                            entitiesUniqueFields
+                                .map(({ field }) => field)
+                                .join(",")
+                        );
+                    }
+                }
             };
 
             /**
@@ -524,10 +484,3 @@ export function HistoryRepositoryMixin<
         return MixedRepository;
     };
 }
-
-// class A extends HistoryRepositoryMixin<HistoryEntity, {}>()<
-//     Constructor<DefaultCrudRepository<HistoryEntity, string, {}>>
-// >(DefaultCrudRepository) {}
-
-// let a: A;
-// a.find();

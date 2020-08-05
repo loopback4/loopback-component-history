@@ -17,15 +17,39 @@ export class HistoryEntity extends Entity {
 
     @property({
         type: "date",
-        defaultFn: "now",
+        default: null,
     })
     endDate: Date;
 
     @property({
         type: "string",
         defaultFn: "uuidv4",
+        index: true,
     })
     id: string;
+
+    static getIdProperties() {
+        return ["id"];
+    }
+
+    static getIdOf(entityOrData: HistoryEntity) {
+        return entityOrData.id;
+    }
+
+    getId() {
+        return this.id;
+    }
+
+    getIdObject() {
+        return { id: this.id };
+    }
+
+    static buildWhereForId(id: any) {
+        return {
+            id: id,
+            endDate: null,
+        };
+    }
 
     constructor(data?: Partial<HistoryEntity>) {
         super(data);

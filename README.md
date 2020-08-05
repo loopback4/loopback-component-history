@@ -141,7 +141,9 @@ import { HistoryRepositoryMixin } from "loopback-component-history";
 export class UserRepository extends HistoryRepositoryMixin<
     User,
     UserRelations
->()() {
+>()<Constructor<DefaultCrudRepository<User, string, UserRelations>>>(
+    DefaultCrudRepository
+) {
     // ...
 }
 ```
@@ -154,5 +156,5 @@ export class UserRepository extends HistoryRepositoryMixin<
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE).  
+This project is licensed under the [MIT license](LICENSE.md).  
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)

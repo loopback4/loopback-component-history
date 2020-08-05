@@ -17,8 +17,7 @@ import { EntityUniqueConflictError } from "../errors";
 import { HistoryEntity, HistoryEntityRelations } from "../models";
 
 export interface HistoryOptions extends Options {
-    history?: true;
-    maxDate?: Date;
+    all?: true;
 }
 
 /**
@@ -27,7 +26,9 @@ export interface HistoryOptions extends Options {
 export interface HistoryRepository<
     T extends HistoryEntity,
     Relations extends HistoryEntityRelations
-> {}
+> {
+    isUnique(entities: DataObject<T>[], where?: Where<T>): Promise<void>;
+}
 
 /**
  * Repository Mixin
@@ -41,565 +42,474 @@ export function HistoryRepositoryMixin<
     >(superClass: R) {
         class MixedRepository extends superClass
             implements HistoryRepository<T, Relations> {
-            // private async createUnique(entities: DataObject<Model>[]) {
-            //     /**
-            //      * 1. duplicate(unique(x),unique(y),unique(z)) == false
-            //      */
-            //     const modelUniquesFields = Object.entries(
-            //         this.entityClass.definition.properties
-            //     )
-            //         .filter(([_, definition]) => definition.unique)
-            //         .map(([fieldName, _]) => fieldName);
+            isUnique = async (entities: DataObject<T>[], where?: Where<T>) => {
+                const ctorUniqueFields = Object.entries(
+                    this.entityClass.definition.properties
+                )
+                    .filter(
+                        ([_, definition]) => this.entityClass.definition.unique
+                    )
+                    .map(([fieldName, _]) => fieldName);
 
-            //     const entitiesUniquesFields = modelUniquesFields
-            //         .map((fieldName) =>
-            //             entities.map<string>((entity: any) => entity[fieldName])
-            //         )
-            //         .filter((field) => field);
+                const entitiesUniqueFields = ctorUniqueFields
+                    .map((fieldName) =>
+                        entities.map<string>((entity: any) => entity[fieldName])
+                    )
+                    .filter((field) => field);
 
-            //     const hasDuplicateUniqueFields = entitiesUniquesFields
-            //         .map(
-            //             (fields) =>
-            //                 Object.values(
-            //                     fields.reduce<{ [key: string]: number }>(
-            //                         (prev, item) => ({
-            //                             ...prev,
-            //                             [item]: (prev.item || 0) + 1,
-            //                         }),
-            //                         {}
-            //                     )
-            //                 ).filter((fieldsCount) => fieldsCount > 1).length >
-            //                 0
-            //         )
-            //         .reduce(
-            //             (prev, hasDuplicate) => prev || hasDuplicate,
-            //             false
-            //         );
+                // const hasDuplicateUniqueFields = entitiesUniqueFields
+                //     .map(
+                //         (fields) =>
+                //             Object.values(
+                //                 fields.reduce<{ [key: string]: number }>(
+                //                     (prev, item) => ({
+                //                         ...prev,
+                //                         [item]: (prev.item || 0) + 1,
+                //                     }),
+                //                     {}
+                //                 )
+                //             ).filter((fieldsCount) => fieldsCount > 1).length > 0
+                //     )
+                //     .reduce((prev, hasDuplicate) => prev || hasDuplicate, false);
 
-            //     if (hasDuplicateUniqueFields) {
-            //         throw new EntityUniqueConflictError(
-            //             this.entityClass,
-            //             modelUniquesFields
-            //         );
-            //     }
+                // if (hasDuplicateUniqueFields) {
+                //     throw new EntityUniqueConflictError(
+                //         this.entityClass,
+                //         modelUniquesFields
+                //     );
+                // }
 
-            //     /**
-            //      * 2. count(and: [
-            //      *          {endDate:null},
-            //      *          {or: [unique(x),unique(y),unique(z)]}
-            //      *    ]) == 0
-            //      */
-            //     const uniqueConditions = modelUniquesFields
-            //         .map((fieldName, index) => ({
-            //             fieldName: fieldName,
-            //             fields: entitiesUniquesFields[index],
-            //         }))
-            //         .filter(({ fields }) => fields.length > 0)
-            //         .map(({ fieldName, fields }) => ({
-            //             [fieldName]: { inq: fields },
-            //         }));
+                // /**
+                //  * 2. count(and: [
+                //  *          {endDate:null},
+                //  *          {or: [unique(x),unique(y),unique(z)]}
+                //  *    ]) == 0
+                //  */
+                // const uniqueConditions = modelUniquesFields
+                //     .map((fieldName, index) => ({
+                //         fieldName: fieldName,
+                //         fields: entitiesUniquesFields[index],
+                //     }))
+                //     .filter(({ fields }) => fields.length > 0)
+                //     .map(({ fieldName, fields }) => ({
+                //         [fieldName]: { inq: fields },
+                //     }));
 
-            //     if (uniqueConditions.length > 0) {
-            //         const uniqueFieldsCount = await super.count({
-            //             and: [
-            //                 { endDate: null },
-            //                 { or: uniqueConditions },
-            //             ] as any,
-            //         });
+                // if (uniqueConditions.length > 0) {
+                //     const uniqueFieldsCount = await super.count({
+                //         and: [{ endDate: null }, { or: uniqueConditions }] as any,
+                //     });
 
-            //         if (uniqueFieldsCount.count > 0) {
-            //             throw new EntityUniqueConflictError(
-            //                 this.entityClass,
-            //                 modelUniquesFields
-            //             );
-            //         }
-            //     }
-            // }
+                //     if (uniqueFieldsCount.count > 0) {
+                //         throw new EntityUniqueConflictError(
+                //             this.entityClass,
+                //             modelUniquesFields
+                //         );
+                //     }
+                // }
 
-            // private async createHistory(
-            //     entities: DataObject<Model>[],
-            //     options?: HistoryOptions
-            // ): Promise<Model[]> {
-            //     /**
-            //      * create(uid:null,beginDate:$now,endDate:null,id:null)
-            //      */
-            //     const date = new Date();
+                // const uniqueConditions = modelUniquesFields
+                //     .map((fieldName) => ({
+                //         fieldName: fieldName,
+                //         field: (data as any)[fieldName],
+                //     }))
+                //     .filter(({ field }) => field)
+                //     .map(({ fieldName, field }) => ({
+                //         [fieldName]: field,
+                //     }));
 
-            //     return await super.createAll(
-            //         entities.map((entity) => ({
-            //             ...entity,
-            //             uid: undefined,
-            //             beginDate: date,
-            //             endDate: null,
-            //             id: undefined,
-            //         })),
-            //         options
-            //     );
-            // }
+                // if (uniqueConditions.length > 0) {
+                //     const uniqueFieldsCount = await super.count({
+                //         and: [{ endDate: null }, { or: uniqueConditions }] as any,
+                //     });
 
-            // private async findHistory(
-            //     group: boolean,
-            //     filter: Filter,
-            //     options?: HistoryOptions
-            // ): Promise<(Model & ModelRelations)[]> {
-            //     /**
-            //      * where: {id:id,endDate<=date|endDate:null}
-            //      * select(where)
-            //      * group(beginDate:last)
-            //      */
-            //     let result = await super.find(filter as any, options);
+                //     if (uniqueFieldsCount.count > 0) {
+                //         throw new EntityUniqueConflictError(
+                //             this.entityClass,
+                //             modelUniquesFields
+                //         );
+                //     }
+                // }
 
-            //     if (group) {
-            //         // find last entities group by id and save last entities in object
-            //         let lastEntities: any = {};
-            //         result.forEach((entity) => {
-            //             if (
-            //                 !lastEntities[entity.id] ||
-            //                 lastEntities[entity.id].beginDate < entity.beginDate
-            //             ) {
-            //                 lastEntities[entity.id] = entity;
-            //             }
-            //         });
+                // /**
+                //  * 2. if (count(and: [
+                //  *          {endDate: null},
+                //  *          where
+                //  *    ]) > 1) => unique(x).length == 0
+                //  */
+                // const targetCount = await super.count(where as any);
 
-            //         // filter only last entity of every group (by id)
-            //         result = result.filter(
-            //             (entity) => lastEntities[entity.id].uid === entity.uid
-            //         );
-            //     }
-
-            //     return result;
-            // }
-
-            // private async updateUnique(data: DataObject<Model>, where: Where) {
-            //     /**
-            //      * 1. count(and: [
-            //      *          {endDate:null},
-            //      *          unique(x)
-            //      *    ]) == 0
-            //      */
-            //     const modelUniquesFields = Object.entries(
-            //         this.entityClass.definition.properties
-            //     )
-            //         .filter(([_, definition]) => definition.unique)
-            //         .map(([fieldName, _]) => fieldName);
-
-            //     const uniqueConditions = modelUniquesFields
-            //         .map((fieldName) => ({
-            //             fieldName: fieldName,
-            //             field: (data as any)[fieldName],
-            //         }))
-            //         .filter(({ field }) => field)
-            //         .map(({ fieldName, field }) => ({
-            //             [fieldName]: field,
-            //         }));
-
-            //     if (uniqueConditions.length > 0) {
-            //         const uniqueFieldsCount = await super.count({
-            //             and: [
-            //                 { endDate: null },
-            //                 { or: uniqueConditions },
-            //             ] as any,
-            //         });
-
-            //         if (uniqueFieldsCount.count > 0) {
-            //             throw new EntityUniqueConflictError(
-            //                 this.entityClass,
-            //                 modelUniquesFields
-            //             );
-            //         }
-            //     }
-
-            //     /**
-            //      * 2. if (count(and: [
-            //      *          {endDate: null},
-            //      *          where
-            //      *    ]) > 1) => unique(x).length == 0
-            //      */
-            //     const targetCount = await super.count(where as any);
-
-            //     if (targetCount.count > 1 && modelUniquesFields.length > 0) {
-            //         throw new EntityUniqueConflictError(
-            //             this.entityClass,
-            //             modelUniquesFields
-            //         );
-            //     }
-            // }
-
-            // private async updateHistory(
-            //     data: DataObject<Model>,
-            //     replace: boolean,
-            //     where: Where,
-            //     options?: HistoryOptions
-            // ): Promise<Count> {
-            //     /**
-            //      * where: {id:id,endDate:null}
-            //      * select(where)
-            //      * create(uid:null,beginDate:$now,endDate:null)
-            //      * update(where) => endDate: $now
-            //      */
-            //     const date = new Date();
-
-            //     const entities = await super.find(
-            //         {
-            //             where: where as any,
-            //         },
-            //         options
-            //     );
-
-            //     await super.createAll(
-            //         entities.map((entity) => ({
-            //             ...(replace ? {} : entity),
-            //             ...data,
-            //             uid: undefined,
-            //             beginDate: date,
-            //             endDate: null,
-            //             id: entity.id,
-            //         })),
-            //         options
-            //     );
-
-            //     return await super.updateAll(
-            //         { endDate: date },
-            //         {
-            //             uid: { inq: entities.map((entity) => entity.uid) },
-            //         } as any,
-            //         options
-            //     );
-            // }
-
-            // private async deleteHistory(
-            //     where: Where,
-            //     options?: HistoryOptions
-            // ): Promise<Count> {
-            //     /**
-            //      * where: {id:id,endDate:null}
-            //      * update(where) => endDate: $now
-            //      */
-            //     return await super.updateAll(
-            //         { endDate: new Date() },
-            //         where as any,
-            //         options
-            //     );
-            // }
+                // if (targetCount.count > 1 && modelUniquesFields.length > 0) {
+                //     throw new EntityUniqueConflictError(
+                //         this.entityClass,
+                //         modelUniquesFields
+                //     );
+                // }
+            };
 
             /**
-             * Create one entity:
-             *  1. Check unique fields
-             *  2.
+             * Check entity unique fields
+             * and set `uid`, `beginDate`, `endDate`, `id` to undefined
+             * then create entity
              */
             create = async (
                 entity: DataObject<T>,
                 options?: HistoryOptions
             ) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.create(entity, options);
                 }
 
-                await this.createUnique([entity]);
+                await this.isUnique([entity]);
 
-                return super.create({
-                    ...entity,
-                    uid: undefined,
-                    beginDate: 
-                }, options);
+                return await super.create(
+                    {
+                        ...entity,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: undefined,
+                    },
+                    options
+                );
             };
+
+            /**
+             * Check entities unique fields
+             * and set `uid`, `beginDate`, `endDate`, `id` to undefined
+             * then create entities
+             */
             createAll = async (
                 entities: DataObject<T>[],
                 options?: HistoryOptions
             ) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.createAll(entities, options);
                 }
 
-                await this.createUnique(entities);
+                await this.isUnique(entities);
 
-                return await this.createHistory(entities, options);
+                return await super.createAll(
+                    entities.map((entity) => ({
+                        ...entity,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: undefined,
+                    })),
+                    options
+                );
             };
 
+            /**
+             * Find all entities by filter and {endDate: null}
+             */
             find = async (filter?: Filter<T>, options?: HistoryOptions) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.find(filter, options);
                 }
 
-
-                const maxDate = options && options.maxDate;
-                const maxDateCondition = maxDate ? { lt: maxDate } : null;
-
-                /** Create history filter by endDate, id */
-                let historyFilter;
-                if (filter && filter.where) {
-                    historyFilter = {
+                return await super.find(
+                    {
                         ...filter,
                         where: {
-                            and: [{ endDate: maxDateCondition }, filter.where],
+                            and: [
+                                { endDate: null },
+                                filter?.where as any,
+                            ].filter((condition) => condition),
                         },
-                    };
-                } else {
-                    historyFilter = {
-                        ...filter,
-                        where: { endDate: maxDateCondition },
-                    };
-                }
-
-                return await this.findHistory(
-                    Boolean(maxDate),
-                   
+                    },
+                    options
+                );
             };
+
+            /**
+             * Find one entity by filter and {endDate: null}
+             */
             findOne = async (filter?: Filter<T>, options?: HistoryOptions) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.findOne(filter, options);
                 }
 
-
-
-                const maxDate = options && options.maxDate;
-                const maxDateCondition = maxDate ? { lt: maxDate } : null;
-
-                /** Create history filter by endDate, id */
-                let historyFilter;
-                if (filter && filter.where) {
-                    historyFilter = {
+                return await super.findOne(
+                    {
                         ...filter,
                         where: {
-                            and: [{ endDate: maxDateCondition }, filter.where],
+                            and: [
+                                { endDate: null },
+                                filter?.where as any,
+                            ].filter((condition) => condition),
                         },
-                    };
-                } else {
-                    historyFilter = {
-                        ...filter,
-                        where: { endDate: maxDateCondition },
-                    };
-                }
-
-                const result = await this.findHistory(
-                    Boolean(maxDate),
-                    historyFilter,
+                    },
                     options
                 );
-
-                if (result[0]) {
-                    return result[0];
-                }
-                return null;
             };
+
+            /**
+             * Find one entity by id and {endDate: null}
+             */
             findById = async (
                 id: string,
                 filter?: FilterExcludingWhere<T>,
                 options?: HistoryOptions
             ) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.findById(id, filter, options);
                 }
 
-
-                const maxDate = options && options.maxDate;
-                const maxDateCondition = maxDate ? { lt: maxDate } : null;
-
-                /** Create history filter by endDate, id */
-                let historyFilter;
-                if (filter && filter.where) {
-                    historyFilter = {
-                        ...filter,
-                        where: {
-                            and: [
-                                {
-                                    id: id,
-                                    endDate: maxDateCondition,
-                                },
-                                filter.where,
-                            ],
-                        },
-                    };
-                } else {
-                    historyFilter = {
-                        ...filter,
-                        where: {
-                            id: id,
-                            endDate: maxDateCondition,
-                        },
-                    };
-                }
-
-                const result = await this.findHistory(
-                    Boolean(maxDate),
-                    historyFilter,
-                    options
-                );
-
-                if (result[0]) {
-                    return result[0];
-                }
-                throw new EntityNotFoundError(this.entityClass, id);
+                return await super.findById(id, filter, options);
             };
-            count = (where?: Where<T>, options?: HistoryOptions) => {
-                if (options && options.history) {
+
+            /**
+             * Count all entities by where and {endDate: null}
+             */
+            count = async (where?: Where<T>, options?: HistoryOptions) => {
+                if (options && options.all) {
                     return super.count(where, options);
                 }
 
-
-                const maxDate = options && options.maxDate;
-                const maxDateCondition = maxDate ? { lt: maxDate } : null;
-
-                /** Create history filter by endDate, id */
-                let historyFilter;
-                if (where) {
-                    historyFilter = {
-                        where: {
-                            and: [{ endDate: maxDateCondition }, where],
-                        },
-                    };
-                } else {
-                    historyFilter = {
-                        where: { endDate: maxDateCondition },
-                    };
-                }
-
-                const result = await this.findHistory(
-                    Boolean(maxDate),
-                    historyFilter,
-                    options
-                );
-
-                return {
-                    count: result.length,
-                };
+                return await super.count({
+                    and: [{ endDate: null }, where as any].filter(
+                        (condition) => condition
+                    ),
+                });
             };
-            exists = (id: string, options?: HistoryOptions) => {
-                if (options && options.history) {
+
+            /**
+             * Check one entity by id and {endDate: null}
+             */
+            exists = async (id: string, options?: HistoryOptions) => {
+                if (options && options.all) {
                     return super.exists(id, options);
                 }
 
-
-                const maxDate = options && options.maxDate;
-                const maxDateCondition = maxDate ? { lt: maxDate } : null;
-
-                /** Create history filter by endDate, id */
-                let historyFilter = {
-                    where: {
-                        id: id,
-                        endDate: maxDateCondition,
-                    },
-                };
-
-                const result = await this.findHistory(
-                    Boolean(maxDate),
-                    historyFilter,
-                    options
-                );
-
-                if (result[0]) {
-                    return true;
-                }
-                return false;
+                return await super.exists(id, options);
             };
 
-            updateAll = (
+            /**
+             * Check data unique fields by where and {endDate: null}
+             * and get target models by where and {endDate: null}
+             * and create updated models with {endDate: null}
+             * then update old models and set {endDate: now()}
+             */
+            updateAll = async (
                 data: DataObject<T>,
                 where?: Where<T>,
                 options?: HistoryOptions
             ) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.updateAll(data, where, options);
                 }
 
+                await this.isUnique([data], {
+                    and: [{ endDate: null }, where as any].filter(
+                        (condition) => condition
+                    ),
+                });
 
-                let historyFilter;
-                if (where) {
-                    historyFilter = { and: [{ endDate: null }, where] };
-                } else {
-                    historyFilter = { endDate: null };
-                }
+                const targets = await super.find(
+                    {
+                        where: {
+                            and: [{ endDate: null }, where as any].filter(
+                                (condition) => condition
+                            ),
+                        },
+                    },
+                    options
+                );
 
-                await this.updateUnique(data, historyFilter);
+                await super.createAll(
+                    targets.map((target) => ({
+                        ...target,
+                        ...data,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: target.id,
+                    })),
+                    options
+                );
 
-                return await this.updateHistory(
-                    data,
-                    false,
-                    historyFilter,
+                return await super.updateAll(
+                    { endDate: new Date() },
+                    {
+                        uid: { inq: targets.map((target) => target.uid) },
+                    } as any,
                     options
                 );
             };
-            updateById = (
+
+            /**
+             * Check data unique fields by id and {endDate: null}
+             * and get target model by id and {endDate: null}
+             * and create updated model with {endDate: null}
+             * then update old model and set {endDate: now()}
+             */
+            updateById = async (
                 id: string,
                 data: DataObject<T>,
                 options?: HistoryOptions
             ) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.updateById(id, data, options);
                 }
 
+                await this.isUnique(
+                    [data],
+                    this.entityClass.buildWhereForId(id)
+                );
 
-                let historyFilter = {
-                    id: id,
-                    endDate: null,
-                };
+                const target = await super.findById(id, {}, options);
 
-                await this.updateUnique(data, historyFilter);
+                await super.create(
+                    {
+                        ...target,
+                        ...data,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: target.id,
+                    },
+                    options
+                );
 
-                await this.updateHistory(data, false, historyFilter, options);
+                await super.updateAll(
+                    { endDate: new Date() },
+                    {
+                        uid: target.uid,
+                    } as any,
+                    options
+                );
             };
+
+            /**
+             * Check data unique fields by id and {endDate: null}
+             * and get target model by id and {endDate: null}
+             * and create updated model with {endDate: null}
+             * then update old model and set {endDate: now()}
+             */
             update = async (entity: T, options?: HistoryOptions) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.update(entity, options);
                 }
 
-                let historyFilter = {
-                    id: entity.id,
-                    endDate: null,
-                };
+                await this.isUnique(
+                    [entity],
+                    this.entityClass.buildWhereForId(
+                        this.entityClass.getIdOf(entity)
+                    )
+                );
 
-                await this.updateUnique(entity, historyFilter);
+                const target = await super.findById(
+                    this.entityClass.getIdOf(entity),
+                    {},
+                    options
+                );
 
-                await this.updateHistory(entity, false, historyFilter, options);
+                await super.create(
+                    {
+                        ...target,
+                        ...entity,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: target.id,
+                    },
+                    options
+                );
+
+                await super.updateAll(
+                    { endDate: new Date() },
+                    {
+                        uid: target.uid,
+                    } as any,
+                    options
+                );
             };
-            replaceById = (
+
+            /**
+             * Check data unique fields by id and {endDate: null}
+             * and get target model by id and {endDate: null}
+             * and create replaced model with {endDate: null}
+             * then update old model and set {endDate: now()}
+             */
+            replaceById = async (
                 id: string,
                 data: DataObject<T>,
                 options?: HistoryOptions
             ) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.replaceById(id, data, options);
                 }
 
+                await this.isUnique(
+                    [data],
+                    this.entityClass.buildWhereForId(id)
+                );
 
-                let historyFilter = {
-                    id: id,
-                    endDate: null,
-                };
+                const target = await super.findById(id, {}, options);
 
-                await this.updateUnique(data, historyFilter);
+                await super.create(
+                    {
+                        ...data,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: target.id,
+                    },
+                    options
+                );
 
-                await this.updateHistory(data, true, historyFilter, options);
+                await super.updateAll(
+                    { endDate: new Date() },
+                    {
+                        uid: target.uid,
+                    } as any,
+                    options
+                );
             };
 
-            deleteAll = (where?: Where<T>, options?: HistoryOptions) => {
-                if (options && options.history) {
+            /**
+             * Update all entities by where and {endDate: null}, set {endDate: now()}
+             */
+            deleteAll = async (where?: Where<T>, options?: HistoryOptions) => {
+                if (options && options.all) {
                     return super.deleteAll(where, options);
                 }
 
-
-                let historyFilter;
-                if (where) {
-                    historyFilter = { and: [{ endDate: null }, where] };
-                } else {
-                    historyFilter = { endDate: null };
-                }
-
-                return await this.deleteHistory(historyFilter, options);
+                return await super.updateAll(
+                    { endDate: new Date() },
+                    {
+                        and: [{ endDate: null }, where as any].filter(
+                            (condition) => condition
+                        ),
+                    },
+                    options
+                );
             };
+
+            /**
+             * Update all entities by id and {endDate: null}, set {endDate: now()}
+             */
             delete = async (entity: T, options?: HistoryOptions) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.delete(entity, options);
                 }
 
                 await super.updateAll(
                     { endDate: new Date() },
-                    this.entityClass.buildWhereForId(entity.getId()),
+                    this.entityClass.buildWhereForId(
+                        this.entityClass.getIdOf(entity)
+                    ),
                     options
                 );
             };
+
+            /**
+             * Update all entities by id and {endDate: null}, set {endDate: now()}
+             */
             deleteById = async (id: string, options?: HistoryOptions) => {
-                if (options && options.history) {
+                if (options && options.all) {
                     return super.deleteById(id, options);
                 }
 
@@ -615,6 +525,9 @@ export function HistoryRepositoryMixin<
     };
 }
 
-class X extends HistoryRepositoryMixin<HistoryEntity, {}>()<
-    Constructor<DefaultCrudRepository<HistoryEntity, string, {}>>
->(DefaultCrudRepository) {}
+// class A extends HistoryRepositoryMixin<HistoryEntity, {}>()<
+//     Constructor<DefaultCrudRepository<HistoryEntity, string, {}>>
+// >(DefaultCrudRepository) {}
+
+// let a: A;
+// a.find();

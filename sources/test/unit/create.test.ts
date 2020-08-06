@@ -4,7 +4,7 @@ import { juggler } from "@loopback/repository";
 import { User } from "./test.model";
 import { UserRepository } from "./test.repository";
 
-describe("Create Model", () => {
+describe("Create Model", async () => {
     const datasource: juggler.DataSource = new juggler.DataSource({
         name: "db",
         connector: "memory",

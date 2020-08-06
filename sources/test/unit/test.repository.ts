@@ -2,12 +2,13 @@ import { Constructor } from "@loopback/core";
 import {
     juggler,
     Getter,
+    Entity,
     BelongsToAccessor,
     HasOneRepositoryFactory,
     DefaultCrudRepository,
 } from "@loopback/repository";
 
-import { Ctor, HistoryRepositoryMixin } from "../../src";
+import { HistoryRepositoryMixin } from "../../src";
 
 import { User, Profile } from "./test.model";
 
@@ -21,7 +22,9 @@ export class UserRepository extends HistoryRepositoryMixin<User, {}>()<
     public readonly parent: BelongsToAccessor<User, typeof User.prototype.id>;
 
     constructor(
-        ctor: Ctor<User>,
+        ctor: typeof Entity & {
+            prototype: User;
+        },
         dataSource: juggler.DataSource,
         profileRepositoryGetter: Getter<ProfileRepository>
     ) {
@@ -49,7 +52,12 @@ export class ProfileRepository extends DefaultCrudRepository<
     string,
     {}
 > {
-    constructor(ctor: Ctor<Profile>, dataSource: juggler.DataSource) {
+    constructor(
+        ctor: typeof Entity & {
+            prototype: Profile;
+        },
+        dataSource: juggler.DataSource
+    ) {
         super(ctor, dataSource);
     }
 }

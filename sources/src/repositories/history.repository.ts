@@ -29,6 +29,33 @@ export interface HistoryRepository<
 
 /**
  * History repository mixin, add CRUD operations supporting history
+ * 
+    +--------+    +------------+
+    | delete |    | deleteById |
+    +--+-----+    +------+-----+
+       |                 |
+       |                 |
+       |  +-----------+  |
+       +--> deleteAll <--+
+          +-----------+
+
+    +--------+    +------------+   +-------------+
+    | update |    | updateById |   | replaceById |
+    +----+---+    +-----+------+   +-------+-----+
+         |              |                  |
+         |              |                  |
+         |        +-----v-----+            |
+         +--------> updateAll <------------+
+                  +-----------+
+
+    +----------+    +--------+
+    | findById |    | exists |
+    +-----+----+    +-----+--+
+          |               |
+          |               |
+          |  +---------+  |
+          +--> findOne <--+
+            +---------+
  */
 export function HistoryRepositoryMixin<
     T extends HistoryEntity,

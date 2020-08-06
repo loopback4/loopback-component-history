@@ -36,14 +36,6 @@ export class HistoryEntity extends Entity {
         return entityOrData.id;
     }
 
-    getId() {
-        return this.id;
-    }
-
-    getIdObject() {
-        return { id: this.id };
-    }
-
     static buildWhereForId(id: any) {
         return {
             id: id,

@@ -10,10 +10,15 @@ import { HistoryEntity } from "../../src";
 
 @model()
 export class User extends HistoryEntity {
-    @property()
+    @property({
+        type: "string",
+        unique: true,
+    })
     username: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     password: string;
 
     @hasOne(() => Profile)
@@ -25,15 +30,26 @@ export class User extends HistoryEntity {
 
 @model()
 export class Profile extends Entity {
-    @property()
+    @property({
+        type: "string",
+        defaultFn: "uuidv4",
+        id: true,
+    })
     id: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     name: string;
 
-    @property()
+    @property({
+        type: "date",
+        defaultFn: "now",
+    })
     date: Date;
 
-    @belongsTo(() => Profile)
-    parentId: any;
+    @property({
+        type: "string",
+    })
+    userId: string;
 }

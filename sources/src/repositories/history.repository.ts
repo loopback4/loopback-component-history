@@ -6,6 +6,7 @@ import {
     Filter,
     FilterExcludingWhere,
     Where,
+    EntityNotFoundError,
 } from "@loopback/repository";
 
 import { EntityUniqueConflictError } from "../errors";
@@ -217,7 +218,19 @@ export function HistoryRepositoryMixin<
                     return super.findById(id, filter, options);
                 }
 
-                return await super.findById(id, filter, options);
+                const result = await super.findOne(
+                    {
+                        ...filter,
+                        where: this.entityClass.buildWhereForId(id),
+                    },
+                    options
+                );
+
+                if (result) {
+                    return result;
+                } else {
+                    throw new EntityNotFoundError(this.entityClass, id);
+                }
             };
 
             /**
@@ -314,30 +327,9 @@ export function HistoryRepositoryMixin<
                     return super.updateById(id, data, options);
                 }
 
-                await this.isUnique(
-                    [data],
-                    this.entityClass.buildWhereForId(id)
-                );
-
-                const target = await super.findById(id, {}, options);
-
-                await super.create(
-                    {
-                        ...target,
-                        ...data,
-                        uid: undefined,
-                        beginDate: undefined,
-                        endDate: undefined,
-                        id: target.id,
-                    },
-                    options
-                );
-
-                await super.updateAll(
-                    { endDate: new Date() },
-                    {
-                        uid: target.uid,
-                    } as any,
+                await this.updateAll(
+                    data,
+                    this.entityClass.buildWhereForId(id),
                     options
                 );
             };

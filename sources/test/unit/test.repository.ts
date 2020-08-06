@@ -1,34 +1,55 @@
+import { Constructor } from "@loopback/core";
 import {
     juggler,
-    repository,
+    Getter,
     BelongsToAccessor,
     HasOneRepositoryFactory,
     DefaultCrudRepository,
-    CrudRepository,
-    Getter,
 } from "@loopback/repository";
 
-import { HistoryRepositoryMixin } from "../../src";
+import { Ctor, HistoryRepositoryMixin } from "../../src";
 
 import { User, Profile } from "./test.model";
 
-export const datasource: juggler.DataSource = new juggler.DataSource({
-    name: "db",
-    connector: "memory",
-});
-MixinTarget<CrudRepository>
 export class UserRepository extends HistoryRepositoryMixin<User, {}>()<
-    DefaultCrudRepository<User, string, {}>
+    Constructor<DefaultCrudRepository<User, string, {}>>
 >(DefaultCrudRepository) {
+    public readonly profile: HasOneRepositoryFactory<
+        Profile,
+        typeof User.prototype.id
+    >;
     public readonly parent: BelongsToAccessor<User, typeof User.prototype.id>;
 
-    constructor() {
-        super(User, datasource);
+    constructor(
+        ctor: Ctor<User>,
+        dataSource: juggler.DataSource,
+        profileRepositoryGetter: Getter<ProfileRepository>
+    ) {
+        super(ctor, dataSource);
+
+        this.profile = this.createHasOneRepositoryFactoryFor(
+            "profile",
+            profileRepositoryGetter
+        );
+        this.registerInclusionResolver(
+            "parent",
+            this.profile.inclusionResolver
+        );
 
         this.parent = this.createBelongsToAccessorFor(
             "parent",
             Getter.fromValue(this)
         );
         this.registerInclusionResolver("parent", this.parent.inclusionResolver);
+    }
+}
+
+export class ProfileRepository extends DefaultCrudRepository<
+    Profile,
+    string,
+    {}
+> {
+    constructor(ctor: Ctor<Profile>, dataSource: juggler.DataSource) {
+        super(ctor, dataSource);
     }
 }

@@ -26,6 +26,10 @@ export class User extends HistoryEntity {
 
     @belongsTo(() => User)
     parentId: string;
+
+    constructor(data?: Partial<User>) {
+        super(data);
+    }
 }
 
 @model()
@@ -52,4 +56,8 @@ export class Profile extends Entity {
         type: "string",
     })
     userId: string;
+
+    constructor(data?: Partial<Profile>) {
+        super(data);
+    }
 }

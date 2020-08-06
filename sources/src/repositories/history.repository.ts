@@ -14,7 +14,6 @@ import { HistoryEntity, HistoryEntityRelations } from "../models";
 
 export interface HistoryOptions extends Options {
     all?: true;
-    replace?: true;
 }
 
 /**
@@ -344,7 +343,7 @@ export function HistoryRepositoryMixin<
 
                 await super.createAll(
                     targets.map((target) => ({
-                        ...(options && options.replace ? undefined : target),
+                        ...target,
                         ...data,
                         uid: undefined,
                         beginDate: undefined,
@@ -421,9 +420,16 @@ export function HistoryRepositoryMixin<
                 }
 
                 await this.updateAll(
-                    data,
+                    {
+                        ...Object.fromEntries(
+                            Object.entries(
+                                this.entityClass.definition.properties
+                            ).map(([key, _]) => [key, undefined])
+                        ),
+                        ...data,
+                    },
                     this.entityClass.buildWhereForId(id),
-                    { ...options, replace: true }
+                    options
                 );
             };
 

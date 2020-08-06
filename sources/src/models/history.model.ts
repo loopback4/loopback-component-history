@@ -28,19 +28,12 @@ export class HistoryEntity extends Entity {
     })
     id: string;
 
-    static getIdProperties() {
-        return ["id"];
-    }
-
     static getIdOf(entityOrData: HistoryEntity) {
         return entityOrData.id;
     }
 
     static buildWhereForId(id: any) {
-        return {
-            id: id,
-            endDate: null,
-        };
+        return { id: id };
     }
 
     constructor(data?: Partial<HistoryEntity>) {

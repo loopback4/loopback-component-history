@@ -1,20 +1,15 @@
 import { expect } from "@loopback/testlab";
 import { juggler } from "@loopback/repository";
 
-import { User, Profile } from "./test.model";
-import { UserRepository, ProfileRepository } from "./test.repository";
+import { User } from "./test.model";
+import { UserRepository } from "./test.repository";
 
 describe("Delete Model", () => {
     const datasource: juggler.DataSource = new juggler.DataSource({
         name: "db",
         connector: "memory",
     });
-    const profileRepository = new ProfileRepository(Profile, datasource);
-    const userRepository = new UserRepository(
-        User,
-        datasource,
-        async () => profileRepository
-    );
+    const userRepository = new UserRepository(User, datasource);
 
     it("deleteAll() Test", async () => {
         await userRepository.deleteAll({}, { all: true });

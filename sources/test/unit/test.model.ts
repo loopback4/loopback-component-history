@@ -1,10 +1,4 @@
-import {
-    Entity,
-    model,
-    property,
-    belongsTo,
-    hasOne,
-} from "@loopback/repository";
+import { model, property, belongsTo } from "@loopback/repository";
 
 import { HistoryEntity } from "../../src";
 
@@ -21,43 +15,10 @@ export class User extends HistoryEntity {
     })
     password: string;
 
-    @hasOne(() => Profile)
-    profile: any;
-
     @belongsTo(() => User)
     parentId: string;
 
     constructor(data?: Partial<User>) {
-        super(data);
-    }
-}
-
-@model()
-export class Profile extends Entity {
-    @property({
-        type: "string",
-        defaultFn: "uuidv4",
-        id: true,
-    })
-    id: string;
-
-    @property({
-        type: "string",
-    })
-    name: string;
-
-    @property({
-        type: "date",
-        defaultFn: "now",
-    })
-    date: Date;
-
-    @property({
-        type: "string",
-    })
-    userId: string;
-
-    constructor(data?: Partial<Profile>) {
         super(data);
     }
 }

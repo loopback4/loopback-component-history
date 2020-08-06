@@ -33,10 +33,10 @@ describe("Delete Model", () => {
         await userRepository.deleteAll({
             username: { inq: ["user1", "user2"] },
         });
-        expect(await await userRepository.count({})).deepEqual({
+        expect(await userRepository.count({})).deepEqual({
             count: 1,
         });
-        expect(await await userRepository.count({}, { all: true })).deepEqual({
+        expect(await userRepository.count({}, { all: true })).deepEqual({
             count: 3,
         });
 
@@ -49,10 +49,10 @@ describe("Delete Model", () => {
             },
             { all: true }
         );
-        expect(await await userRepository.count({})).deepEqual({
+        expect(await userRepository.count({})).deepEqual({
             count: 1,
         });
-        expect(await await userRepository.count({}, { all: true })).deepEqual({
+        expect(await userRepository.count({}, { all: true })).deepEqual({
             count: 1,
         });
     });
@@ -72,10 +72,10 @@ describe("Delete Model", () => {
          * Test soft delete one user using entity
          */
         await userRepository.delete(new User({ id: "1" }));
-        expect(await await userRepository.count({})).deepEqual({
+        expect(await userRepository.count({})).deepEqual({
             count: 2,
         });
-        expect(await await userRepository.count({}, { all: true })).deepEqual({
+        expect(await userRepository.count({}, { all: true })).deepEqual({
             count: 3,
         });
 
@@ -83,10 +83,10 @@ describe("Delete Model", () => {
          * Test hard delete one user using entity
          */
         await userRepository.delete(new User({ uid: "x" }), { all: true });
-        expect(await await userRepository.count({})).deepEqual({
+        expect(await userRepository.count({})).deepEqual({
             count: 2,
         });
-        expect(await await userRepository.count({}, { all: true })).deepEqual({
+        expect(await userRepository.count({}, { all: true })).deepEqual({
             count: 2,
         });
     });
@@ -106,10 +106,10 @@ describe("Delete Model", () => {
          * Test soft delete one user using id
          */
         await userRepository.deleteById("1");
-        expect(await await userRepository.count({})).deepEqual({
+        expect(await userRepository.count({})).deepEqual({
             count: 2,
         });
-        expect(await await userRepository.count({}, { all: true })).deepEqual({
+        expect(await userRepository.count({}, { all: true })).deepEqual({
             count: 3,
         });
 
@@ -117,10 +117,10 @@ describe("Delete Model", () => {
          * Test hard delete one user using id
          */
         await userRepository.deleteById("x", { all: true });
-        expect(await await userRepository.count({})).deepEqual({
+        expect(await userRepository.count({})).deepEqual({
             count: 2,
         });
-        expect(await await userRepository.count({}, { all: true })).deepEqual({
+        expect(await userRepository.count({}, { all: true })).deepEqual({
             count: 2,
         });
     });

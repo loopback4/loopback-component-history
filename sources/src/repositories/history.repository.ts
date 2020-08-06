@@ -14,6 +14,7 @@ import { HistoryEntity, HistoryEntityRelations } from "../models";
 
 export interface HistoryOptions extends Options {
     all?: true;
+    replace?: true;
 }
 
 /**
@@ -43,9 +44,13 @@ export function HistoryRepositoryMixin<
              * then get entities unique columns values
              * for each unique column, values pair check duplicated values are not existed
              * check the values with column, values pair where count is 0
-             * if where existed (update), check updatable count is not more than 1
+             * if where existed (update), check updatable count is less than 1
              */
-            isUnique = async (entities: DataObject<T>[], where?: Where<T>) => {
+            isUnique = async (
+                entities: DataObject<T>[],
+                where?: Where<T>,
+                options?: HistoryOptions
+            ) => {
                 const ctorUniqueFields = Object.entries(
                     this.entityClass.definition.properties
                 )
@@ -87,7 +92,10 @@ export function HistoryRepositoryMixin<
                     ],
                 };
 
-                const conflicts = await super.count(entitiesUniqueFieldsWhere);
+                const conflicts = await super.count(
+                    entitiesUniqueFieldsWhere,
+                    options
+                );
                 if (conflicts.count > 0) {
                     throw new EntityUniqueConflictError(
                         this.entityClass,
@@ -96,8 +104,8 @@ export function HistoryRepositoryMixin<
                 }
 
                 if (where) {
-                    const updatables = await super.find({ where: where });
-                    if (updatables.length > 1) {
+                    const updatables = await super.count(where, options);
+                    if (updatables.count > 1) {
                         throw new EntityUniqueConflictError(
                             this.entityClass,
                             entitiesUniqueFields
@@ -121,7 +129,7 @@ export function HistoryRepositoryMixin<
                     return super.create(entity, options);
                 }
 
-                await this.isUnique([entity]);
+                await this.isUnique([entity], undefined, options);
 
                 return await super.create(
                     {
@@ -148,7 +156,7 @@ export function HistoryRepositoryMixin<
                     return super.createAll(entities, options);
                 }
 
-                await this.isUnique(entities);
+                await this.isUnique(entities, undefined, options);
 
                 return await super.createAll(
                     entities.map((entity) => ({
@@ -218,7 +226,7 @@ export function HistoryRepositoryMixin<
                     return super.findById(id, filter, options);
                 }
 
-                const result = await super.findOne(
+                const result = await this.findOne(
                     {
                         ...filter,
                         where: this.entityClass.buildWhereForId(id),
@@ -241,11 +249,14 @@ export function HistoryRepositoryMixin<
                     return super.count(where, options);
                 }
 
-                return await super.count({
-                    and: [{ endDate: null }, where as any].filter(
-                        (condition) => condition
-                    ),
-                });
+                return await super.count(
+                    {
+                        and: [{ endDate: null }, where as any].filter(
+                            (condition) => condition
+                        ),
+                    },
+                    options
+                );
             };
 
             /**
@@ -256,7 +267,14 @@ export function HistoryRepositoryMixin<
                     return super.exists(id, options);
                 }
 
-                return await super.exists(id, options);
+                const result = await this.findOne(
+                    {
+                        where: this.entityClass.buildWhereForId(id),
+                    },
+                    options
+                );
+
+                return Boolean(result);
             };
 
             /**
@@ -274,11 +292,15 @@ export function HistoryRepositoryMixin<
                     return super.updateAll(data, where, options);
                 }
 
-                await this.isUnique([data], {
-                    and: [{ endDate: null }, where as any].filter(
-                        (condition) => condition
-                    ),
-                });
+                await this.isUnique(
+                    [data],
+                    {
+                        and: [{ endDate: null }, where as any].filter(
+                            (condition) => condition
+                        ),
+                    },
+                    options
+                );
 
                 const targets = await super.find(
                     {
@@ -293,7 +315,7 @@ export function HistoryRepositoryMixin<
 
                 await super.createAll(
                     targets.map((target) => ({
-                        ...target,
+                        ...(options && options.replace ? undefined : target),
                         ...data,
                         uid: undefined,
                         beginDate: undefined,
@@ -345,36 +367,11 @@ export function HistoryRepositoryMixin<
                     return super.update(entity, options);
                 }
 
-                await this.isUnique(
-                    [entity],
+                await this.updateAll(
+                    entity,
                     this.entityClass.buildWhereForId(
                         this.entityClass.getIdOf(entity)
-                    )
-                );
-
-                const target = await super.findById(
-                    this.entityClass.getIdOf(entity),
-                    {},
-                    options
-                );
-
-                await super.create(
-                    {
-                        ...target,
-                        ...entity,
-                        uid: undefined,
-                        beginDate: undefined,
-                        endDate: undefined,
-                        id: target.id,
-                    },
-                    options
-                );
-
-                await super.updateAll(
-                    { endDate: new Date() },
-                    {
-                        uid: target.uid,
-                    } as any,
+                    ),
                     options
                 );
             };
@@ -394,30 +391,10 @@ export function HistoryRepositoryMixin<
                     return super.replaceById(id, data, options);
                 }
 
-                await this.isUnique(
-                    [data],
-                    this.entityClass.buildWhereForId(id)
-                );
-
-                const target = await super.findById(id, {}, options);
-
-                await super.create(
-                    {
-                        ...data,
-                        uid: undefined,
-                        beginDate: undefined,
-                        endDate: undefined,
-                        id: target.id,
-                    },
-                    options
-                );
-
-                await super.updateAll(
-                    { endDate: new Date() },
-                    {
-                        uid: target.uid,
-                    } as any,
-                    options
+                await this.updateAll(
+                    data,
+                    this.entityClass.buildWhereForId(id),
+                    { ...options, replace: true }
                 );
             };
 
@@ -448,8 +425,7 @@ export function HistoryRepositoryMixin<
                     return super.delete(entity, options);
                 }
 
-                await super.updateAll(
-                    { endDate: new Date() },
+                await this.deleteAll(
                     this.entityClass.buildWhereForId(
                         this.entityClass.getIdOf(entity)
                     ),
@@ -465,8 +441,7 @@ export function HistoryRepositoryMixin<
                     return super.deleteById(id, options);
                 }
 
-                await super.updateAll(
-                    { endDate: new Date() },
+                await this.deleteAll(
                     this.entityClass.buildWhereForId(id),
                     options
                 );

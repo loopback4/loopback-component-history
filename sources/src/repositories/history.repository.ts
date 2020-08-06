@@ -296,14 +296,12 @@ export function HistoryRepositoryMixin<
                     return super.exists(id, options);
                 }
 
-                const result = await this.findOne(
-                    {
-                        where: this.entityClass.buildWhereForId(id),
-                    },
+                const result = await this.count(
+                    this.entityClass.buildWhereForId(id),
                     options
                 );
 
-                return Boolean(result);
+                return result.count > 0;
             };
 
             /**

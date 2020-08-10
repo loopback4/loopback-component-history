@@ -15,6 +15,40 @@ describe("Create Model", () => {
         userRepository = new UserRepository(User, dataSource);
     });
 
+    it("createAll() Test", async () => {
+        await userRepository.deleteAll({}, { all: true });
+
+        /**
+         * Test create multiple users with different usernames(unique)
+         */
+        expect(
+            await userRepository.createAll([
+                { username: "user1", password: "123" },
+                { username: "user2", password: "231" },
+                { username: "user3", password: "321" },
+            ])
+        ).containDeep([
+            {
+                endDate: null,
+                username: "user1",
+                password: "123",
+                parentId: undefined,
+            },
+            {
+                endDate: null,
+                username: "user2",
+                password: "231",
+                parentId: undefined,
+            },
+            {
+                endDate: null,
+                username: "user3",
+                password: "321",
+                parentId: undefined,
+            },
+        ]);
+    });
+
     it("create() Test", async () => {
         await userRepository.deleteAll({}, { all: true });
 
@@ -75,39 +109,5 @@ describe("Create Model", () => {
             password: "123",
             parentId: "12",
         });
-    });
-
-    it("createAll() Test", async () => {
-        await userRepository.deleteAll({}, { all: true });
-
-        /**
-         * Test create multiple users with different usernames(unique)
-         */
-        expect(
-            await userRepository.createAll([
-                { username: "user1", password: "123" },
-                { username: "user2", password: "231" },
-                { username: "user3", password: "321" },
-            ])
-        ).containDeep([
-            {
-                endDate: null,
-                username: "user1",
-                password: "123",
-                parentId: undefined,
-            },
-            {
-                endDate: null,
-                username: "user2",
-                password: "231",
-                parentId: undefined,
-            },
-            {
-                endDate: null,
-                username: "user3",
-                password: "321",
-                parentId: undefined,
-            },
-        ]);
     });
 });

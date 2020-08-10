@@ -27,6 +27,16 @@ export interface HistoryRepository<
 }
 
 /**
+ *  +--------+
+ *  | create |
+ *  +----+---+
+ *       |
+ *       |
+ *  +----v------+
+ *  | createAll |
+ *  +-----------+
+ *
+ *
  *  +----------+    +--------+
  *  | findById |    | exists |
  *  +----+-----+    +---+----+
@@ -147,33 +157,6 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Check entity unique fields
-             * and set `uid`, `beginDate`, `endDate`, `id` to undefined
-             * then create entity
-             */
-            create = async (
-                entity: DataObject<T>,
-                options?: HistoryOptions
-            ) => {
-                if (options && options.all) {
-                    return super.create(entity, options);
-                }
-
-                await this.isUnique([entity], undefined, options);
-
-                return await super.create(
-                    {
-                        ...entity,
-                        uid: undefined,
-                        beginDate: undefined,
-                        endDate: undefined,
-                        id: undefined,
-                    },
-                    options
-                );
-            };
-
-            /**
              * Check entities unique fields
              * and set `uid`, `beginDate`, `endDate`, `id` to undefined
              * then create entities
@@ -198,6 +181,22 @@ export function HistoryRepositoryMixin<
                     })),
                     options
                 );
+            };
+
+            /**
+             * History create() using createAll()
+             */
+            create = async (
+                entity: DataObject<T>,
+                options?: HistoryOptions
+            ) => {
+                if (options && options.all) {
+                    return super.create(entity, options);
+                }
+
+                const result = await this.createAll([entity], options);
+
+                return result[0];
             };
 
             /**
@@ -245,7 +244,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Find one entity by id and {endDate: null}
+             * History findById() using findOne()
              */
             findById = async (
                 id: string,
@@ -290,7 +289,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Check one entity by id and {endDate: null}
+             * History exists() using count()
              */
             exists = async (id: string, options?: HistoryOptions) => {
                 if (options && options.all) {
@@ -363,10 +362,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Check data unique fields by id and {endDate: null}
-             * and get target model by id and {endDate: null}
-             * and create updated model with {endDate: null}
-             * then update old model and set {endDate: now()}
+             * History updateById() using updateAll()
              */
             updateById = async (
                 id: string,
@@ -385,10 +381,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Check data unique fields by id and {endDate: null}
-             * and get target model by id and {endDate: null}
-             * and create updated model with {endDate: null}
-             * then update old model and set {endDate: now()}
+             * History update() using updateAll()
              */
             update = async (entity: T, options?: HistoryOptions) => {
                 if (options && options.all) {
@@ -405,10 +398,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Check data unique fields by id and {endDate: null}
-             * and get target model by id and {endDate: null}
-             * and create replaced model with {endDate: null}
-             * then update old model and set {endDate: now()}
+             * History replaceById() using updateAll()
              */
             replaceById = async (
                 id: string,
@@ -453,7 +443,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Update all entities by id and {endDate: null}, set {endDate: now()}
+             * History delete() using deleteAll()
              */
             delete = async (entity: T, options?: HistoryOptions) => {
                 if (options && options.all) {
@@ -469,7 +459,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Update all entities by id and {endDate: null}, set {endDate: now()}
+             * History deleteById() using deleteAll()
              */
             deleteById = async (id: string, options?: HistoryOptions) => {
                 if (options && options.all) {

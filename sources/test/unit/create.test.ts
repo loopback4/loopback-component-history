@@ -4,12 +4,16 @@ import { juggler } from "@loopback/repository";
 import { User } from "./test.model";
 import { UserRepository } from "./test.repository";
 
-describe("Create Model", async () => {
-    const datasource: juggler.DataSource = new juggler.DataSource({
-        name: "db",
-        connector: "memory",
+describe("Create Model", () => {
+    let userRepository: UserRepository;
+    before(async () => {
+        const dataSource = new juggler.DataSource({
+            name: "db",
+            connector: "memory",
+        });
+
+        userRepository = new UserRepository(User, dataSource);
     });
-    const userRepository = new UserRepository(User, datasource);
 
     it("create() Test", async () => {
         await userRepository.deleteAll({}, { all: true });

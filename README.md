@@ -153,7 +153,7 @@ export class UserRepository extends HistoryRepositoryMixin<
 
 ---
 
-## Contributions
+## Contributors
 
 -   [KoLiBer](https://www.linkedin.com/in/mohammad-hosein-nemati-665b1813b/)
 

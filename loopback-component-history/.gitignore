@@ -62,4 +62,3 @@ typings/
 
 # Cache used by TypeScript's incremental build
 *.tsbuildinfo
-package-lock.json

@@ -68,7 +68,6 @@ export interface HistoryRepository<
  */
 /**
  * History repository mixin, add CRUD operations supporting history
- *
  */
 export function HistoryRepositoryMixin<
     T extends HistoryEntity,
@@ -77,7 +76,8 @@ export function HistoryRepositoryMixin<
     return function <
         R extends MixinTarget<DefaultCrudRepository<T, string, Relations>>
     >(superClass: R) {
-        class MixedRepository extends superClass
+        class MixedRepository
+            extends superClass
             implements HistoryRepository<T, Relations> {
             /**
              * Find ctor unique columns

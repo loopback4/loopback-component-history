@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.0
+
+-   **Deps**: update packages
+-   **Clean**: remove `sources` folder
+-   **Feat**: add unit-tests for `create`, `find`, `edit`, `delete`
+-   **Docs**: add shields to `README`
+
 ## v0.8.0
 
 -   **Deps**: update packages

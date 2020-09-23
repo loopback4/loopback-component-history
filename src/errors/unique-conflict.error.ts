@@ -7,11 +7,11 @@ export class EntityUniqueConflictError<
     message: string;
     statusCode: number;
     entityName: string;
-    entityUniqueFields: string[];
+    fieldName: string;
 
     constructor(
         entityOrName: typeof Entity | string,
-        entityUniqueFields: string[],
+        fieldName: string,
         extraProperties?: Props
     ) {
         const entityName =
@@ -19,17 +19,15 @@ export class EntityUniqueConflictError<
                 ? entityOrName
                 : entityOrName.modelName || entityOrName.name;
 
-        super(
-            `Conflict ${entityName} with unique fields: ${entityUniqueFields}`
-        );
+        super(`Conflict ${entityName} with unique field: ${fieldName}`);
 
         Error.captureStackTrace(this, this.constructor);
 
         this.name = "ENTITY_UNIQUE_CONFLICT";
         this.statusCode = 409;
-        this.message = `Conflict ${entityName} with unique fields: ${entityUniqueFields}`;
+        this.message = `Conflict ${entityName} with unique field: ${fieldName}`;
         this.entityName = entityName;
-        this.entityUniqueFields = entityUniqueFields;
+        this.fieldName = fieldName;
 
         Object.assign(this, extraProperties);
     }

@@ -1,5 +1,7 @@
 # loopback-component-history
 
+[![Build Status](https://travis-ci.com/loopback4/loopback-component-history.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-history)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history?ref=badge_shield)
 ![Travis (.org) branch](https://img.shields.io/travis/loopback4/loopback-component-history/master)
 ![npm](https://img.shields.io/npm/v/loopback-component-history)
 ![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-history)
@@ -161,3 +163,6 @@ export class UserRepository extends HistoryRepositoryMixin<
 
 This project is licensed under the [MIT license](LICENSE.md).
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history?ref=badge_large)

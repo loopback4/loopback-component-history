@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/loopback4/loopback-component-history/compare/1.0.1...1.1.0) (2021-09-12)
+
+
+### Bug Fixes
+
+* override package-lock.json file ([8965585](https://github.com/loopback4/loopback-component-history/commit/8965585875c6f498bce4aa47f7645adb445b7620))
+* remove dependecy create, createAll ([52c6511](https://github.com/loopback4/loopback-component-history/commit/52c65111d4a372f5bfa3438afd44c23aaee80427))
+* remove UnitTest for old unsafe findOne ([37b282f](https://github.com/loopback4/loopback-component-history/commit/37b282f8843792dae62d875d0949a90008b3085c))
+
+
+### Features
+
+* add new Github Action based CI/CD pipeline ([06f7ae9](https://github.com/loopback4/loopback-component-history/commit/06f7ae948bb1e10357880939bb7ab4eedf95d6b3))
+
 ## v1.0.1
 
 -   **Fix**: remove sources folder from ci file

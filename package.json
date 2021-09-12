@@ -12,14 +12,9 @@
         "node": ">=10.16"
     },
     "scripts": {
-        "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
-        "prebuild": "npm run clean",
+        "start": "nodemon --exec \"node -r ts-node/register --inspect=0.0.0.0\" src/index.ts",
         "build": "lb-tsc",
-        "build:watch": "lb-tsc --watch",
-        "start": "node .",
-        "start:watch": "nodemon .",
-        "test": "lb-mocha --allow-console-logs \"test/**/*.test.ts\"",
-        "prepublishOnly": "npm run build"
+        "test": "lb-mocha --allow-console-logs \"test/**/*.test.ts\""
     },
     "repository": {
         "type": "git",

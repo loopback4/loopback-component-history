@@ -1,11 +1,10 @@
 # loopback-component-history
 
-[![Build Status](https://travis-ci.com/loopback4/loopback-component-history.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-history)
+![checks](https://img.shields.io/github/checks-status/loopback4/loopback-component-history/next)
+![npm latest](https://img.shields.io/npm/v/loopback-component-history/latest)
+![npm next](https://img.shields.io/npm/v/loopback-component-history/next)
+![license](https://img.shields.io/github/license/loopback4/loopback-component-history)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history?ref=badge_shield)
-![Travis (.org) branch](https://img.shields.io/travis/loopback4/loopback-component-history/master)
-![npm](https://img.shields.io/npm/v/loopback-component-history)
-![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-history)
-![GitHub](https://img.shields.io/github/license/loopback4/loopback-component-history)
 
 Saving history of `Create`, `Update`, `Delete` of a table sometimes is a big problem in data model design level.
 
@@ -22,71 +21,88 @@ A good approach for saving history is about adding some columns to your tables:
 
 Now, using this simple extension you can add all history features to your models and repositories.
 
----
-
 ## Installation
+
+Use the package manager [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) to install `loopback-component-history`.
 
 ```bash
 npm i --save loopback-component-history
 ```
 
----
-
 ## Usage
 
-### History Model
+Follow these steps to add `History` extension to your loopback4 application:
 
-1. Change your model parent class from `Entity` to `HistoryEntity`
-2. Remove `id` property from your model declaration
+-   Change your model parent class from `Entity` to `HistoryEntity`
+-   Remove `id` property from your model declaration
 
-#### Example
+    ```ts
+    // Old
+    @model()
+    export class User extends Entity {
+        @property({
+            type: "string",
+            unique: true,
+            id: true,
+        })
+        id: string;
 
-Change your model from:
+        @property({
+            type: "string",
+            default: "",
+        })
+        username: string;
 
-```ts
-@model()
-export class User extends Entity {
-    @property({
-        type: "string",
-        unique: true,
-        id: true,
-    })
-    id: string;
-
-    @property({
-        type: "string",
-        default: "",
-    })
-    username: string;
-
-    constructor(data?: Partial<User>) {
-        super(data);
+        constructor(data?: Partial<User>) {
+            super(data);
+        }
     }
-}
-```
 
-To:
+    // New
+    import { HistoryEntity } from "loopback-component-history";
 
-```ts
-import { HistoryEntity } from "loopback-component-history";
+    @model()
+    export class User extends HistoryEntity {
+        @property({
+            type: "string",
+            default: "",
+        })
+        username: string;
 
-@model()
-export class User extends HistoryEntity {
-    @property({
-        type: "string",
-        default: "",
-    })
-    username: string;
-
-    constructor(data?: Partial<User>) {
-        super(data);
+        constructor(data?: Partial<User>) {
+            super(data);
+        }
     }
-}
-```
+    ```
+
+-   Change your repository parent class from `DefaultCrudRepository` to `HistoryRepositoryMixin()()`
+
+    ```ts
+    // Old
+    export class UserRepository extends DefaultCrudRepository<
+        User,
+        typeof User.prototype.id,
+        UserRelations
+    > {
+        // ...
+    }
+
+    // New
+    import { HistoryRepositoryMixin } from "loopback-component-history";
+
+    export class UserRepository extends HistoryRepositoryMixin<
+        User,
+        UserRelations
+    >()<Constructor<DefaultCrudRepository<User, string, UserRelations>>>(
+        DefaultCrudRepository
+    ) {
+        // ...
+    }
+    ```
 
 ---
 
-#### Tip
+### Tip
 
 Don't use `unique` indexes in your models, instead add `unique` property to model definition
 
@@ -120,49 +136,15 @@ export class User extends HistoryEntity {
 
 ---
 
-### History Repository Mixin
+## Contributing
 
-Change your repository parent class from `DefaultCrudRepository` to `HistoryRepositoryMixin()()`
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-#### Example
-
-Change your repository from:
-
-```ts
-export class UserRepository extends DefaultCrudRepository<
-    User,
-    typeof User.prototype.id,
-    UserRelations
-> {
-    // ...
-}
-```
-
-To:
-
-```ts
-import { HistoryRepositoryMixin } from "loopback-component-history";
-
-export class UserRepository extends HistoryRepositoryMixin<
-    User,
-    UserRelations
->()<Constructor<DefaultCrudRepository<User, string, UserRelations>>>(
-    DefaultCrudRepository
-) {
-    // ...
-}
-```
-
----
-
-## Contributors
-
--   [KoLiBer](https://www.linkedin.com/in/mohammad-hosein-nemati-665b1813b/)
+Please make sure to update tests as appropriate.
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE.md).
+This project is licensed under the [MIT](LICENSE.md).  
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)
-
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-history?ref=badge_large)

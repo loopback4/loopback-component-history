@@ -15,13 +15,6 @@ import { HistoryEntity, HistoryEntityRelations } from "../models";
 export interface HistoryOptions extends Options {
     all?: true;
 }
-// TODO: remove dependency findById -> find
-// TODO: remove dependency exists -> count
-// TODO: remove dependency update -> updateAll
-// TODO: remove dependency updateById -> updateAll
-// TODO: remove dependency replaceById -> updateAll
-// TODO: remove dependency delete -> deleteAll
-// TODO: remove dependency deleteById -> deleteAll
 
 /**
  * Find ctor unique columns

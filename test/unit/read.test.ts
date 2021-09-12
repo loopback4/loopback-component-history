@@ -63,43 +63,6 @@ describe("Read Model", () => {
         ]);
     });
 
-    it("findOne() Test", async () => {
-        await userRepository.deleteAll({}, { all: true });
-        await userRepository.createAll(
-            [
-                { uid: "x", id: "1", username: "user1", password: "123" },
-                { uid: "y", id: "2", username: "user2", password: "231" },
-                { uid: "z", id: "3", username: "user3", password: "321" },
-            ],
-            { all: true }
-        );
-        await userRepository.deleteById("1");
-
-        /**
-         * Test soft findOne using where
-         */
-        expect(
-            await userRepository.findOne({
-                where: { username: "user1" },
-            })
-        ).containDeep(null);
-
-        /**
-         * Test hard findOne using where
-         */
-        expect(
-            await userRepository.findOne(
-                {
-                    where: { username: "user1" },
-                },
-                { all: true }
-            )
-        ).containDeep({
-            username: "user1",
-            password: "123",
-        });
-    });
-
     it("findById() Test", async () => {
         await userRepository.deleteAll({}, { all: true });
         await userRepository.createAll(

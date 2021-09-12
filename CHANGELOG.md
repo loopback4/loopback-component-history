@@ -1,5 +1,3 @@
-# Changelog
-
 ## v1.0.1
 
 -   **Fix**: remove sources folder from ci file

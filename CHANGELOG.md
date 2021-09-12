@@ -1,3 +1,10 @@
+# [1.2.0-next.2](https://github.com/loopback4/loopback-component-history/compare/1.2.0-next.1...1.2.0-next.2) (2021-09-12)
+
+
+### Bug Fixes
+
+* change README ([1450aaa](https://github.com/loopback4/loopback-component-history/commit/1450aaa13fba88239404e477076010b6e1f9aec1))
+
 # [1.2.0-next.1](https://github.com/loopback4/loopback-component-history/compare/1.1.1...1.2.0-next.1) (2021-09-12)
 
 

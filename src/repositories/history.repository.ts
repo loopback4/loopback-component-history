@@ -1,6 +1,6 @@
 import { MixinTarget } from "@loopback/core";
 import {
-    DefaultCrudRepository,
+    EntityCrudRepository,
     DataObject,
     Options,
     Filter,
@@ -15,57 +15,91 @@ import { HistoryEntity, HistoryEntityRelations } from "../models";
 export interface HistoryOptions extends Options {
     all?: true;
 }
+// TODO: remove dependency findById -> find
+// TODO: remove dependency exists -> count
+// TODO: remove dependency update -> updateAll
+// TODO: remove dependency updateById -> updateAll
+// TODO: remove dependency replaceById -> updateAll
+// TODO: remove dependency delete -> deleteAll
+// TODO: remove dependency deleteById -> deleteAll
 
 /**
- * This interface contains additional types added to HistoryRepositoryMixin type
+ * Find ctor unique columns
+ * then get entities unique columns values
+ * for each unique column, values pair check duplicated values are not existed
+ * check the values with column, values pair where count is 0
+ * if where existed (update), check updatable count is less than 1
  */
-export interface HistoryRepository<
+const isUnique = async <
     T extends HistoryEntity,
     Relations extends HistoryEntityRelations
-> {
-    isUnique(entities: DataObject<T>[], where?: Where<T>): Promise<void>;
-}
+>(
+    repository: EntityCrudRepository<T, string, Relations>,
+    entities: DataObject<T>[],
+    where?: Where<T>,
+    options?: HistoryOptions
+) => {
+    const ctorUniqueFields = Object.entries(
+        repository.entityClass.definition.properties
+    )
+        .filter(([_, definition]) => definition.unique)
+        .map(([fieldName, _]) => fieldName);
 
-/**
- *  +--------+
- *  | create |
- *  +----+---+
- *       |
- *       |
- *  +----v------+
- *  | createAll |
- *  +-----------+
- *
- *
- *  +----------+    +--------+
- *  | findById |    | exists |
- *  +----+-----+    +---+----+
- *       |              |
- *       |              |
- *  +----v----+     +---v---+
- *  | findOne |     | count |
- *  +---------+     +-------+
- *
- *
- *  +--------+    +------------+   +-------------+
- *  | update |    | updateById |   | replaceById |
- *  +----+---+    +-----+------+   +-------+-----+
- *       |              |                  |
- *       |              |                  |
- *       |        +-----v-----+            |
- *       +--------> updateAll <------------+
- *                +-----------+
- *
- *
- *  +--------+    +------------+
- *  | delete |    | deleteById |
- *  +--+-----+    +------+-----+
- *     |                 |
- *     |                 |
- *     |  +-----------+  |
- *     +--> deleteAll <--+
- *        +-----------+
- */
+    const entitiesUniqueFields = ctorUniqueFields
+        .map((fieldName) => ({
+            field: fieldName,
+            items: entities
+                .map<string>((entity: any) => entity[fieldName])
+                .filter((item) => item),
+        }))
+        .filter(({ items }) => items.length > 0);
+
+    if (entitiesUniqueFields.length <= 0) {
+        return;
+    }
+
+    for (let { field, items } of entitiesUniqueFields) {
+        if (new Set(items).size !== items.length) {
+            throw new EntityUniqueConflictError(repository.entityClass, field);
+        }
+    }
+
+    const entitiesUniqueFieldsWhere: any = {
+        and: [
+            { endDate: null },
+            {
+                or: entitiesUniqueFields.map(({ field, items }) => ({
+                    [field]: { inq: items },
+                })),
+            },
+        ],
+    };
+
+    const conflicts = await repository.count(entitiesUniqueFieldsWhere, {
+        ...options,
+        all: true,
+    });
+    if (conflicts.count > 0) {
+        throw new EntityUniqueConflictError(
+            repository.entityClass,
+            entitiesUniqueFields.map(({ field }) => field).join(",")
+        );
+    }
+
+    if (where) {
+        const updatables = await repository.count(where, {
+            ...options,
+            all: true,
+        });
+        if (updatables.count > 1) {
+            throw new EntityUniqueConflictError(
+                repository.entityClass,
+                entitiesUniqueFields.map(({ field }) => field).join(",")
+            );
+        }
+    }
+};
+
 /**
  * History repository mixin, add CRUD operations supporting history
  */
@@ -74,91 +108,12 @@ export function HistoryRepositoryMixin<
     Relations extends HistoryEntityRelations
 >() {
     return function <
-        R extends MixinTarget<DefaultCrudRepository<T, string, Relations>>
+        R extends MixinTarget<EntityCrudRepository<T, string, Relations>>
     >(superClass: R) {
-        class MixedRepository
-            extends superClass
-            implements HistoryRepository<T, Relations> {
-            /**
-             * Find ctor unique columns
-             * then get entities unique columns values
-             * for each unique column, values pair check duplicated values are not existed
-             * check the values with column, values pair where count is 0
-             * if where existed (update), check updatable count is less than 1
-             */
-            isUnique = async (
-                entities: DataObject<T>[],
-                where?: Where<T>,
-                options?: HistoryOptions
-            ) => {
-                const ctorUniqueFields = Object.entries(
-                    this.entityClass.definition.properties
-                )
-                    .filter(([_, definition]) => definition.unique)
-                    .map(([fieldName, _]) => fieldName);
-
-                const entitiesUniqueFields = ctorUniqueFields
-                    .map((fieldName) => ({
-                        field: fieldName,
-                        items: entities
-                            .map<string>((entity: any) => entity[fieldName])
-                            .filter((item) => item),
-                    }))
-                    .filter(({ items }) => items.length > 0);
-
-                if (entitiesUniqueFields.length <= 0) {
-                    return;
-                }
-
-                for (let { field, items } of entitiesUniqueFields) {
-                    if (new Set(items).size !== items.length) {
-                        throw new EntityUniqueConflictError(
-                            this.entityClass,
-                            field
-                        );
-                    }
-                }
-
-                const entitiesUniqueFieldsWhere: any = {
-                    and: [
-                        { endDate: null },
-                        {
-                            or: entitiesUniqueFields.map(
-                                ({ field, items }) => ({
-                                    [field]: { inq: items },
-                                })
-                            ),
-                        },
-                    ],
-                };
-
-                const conflicts = await super.count(
-                    entitiesUniqueFieldsWhere,
-                    options
-                );
-                if (conflicts.count > 0) {
-                    throw new EntityUniqueConflictError(
-                        this.entityClass,
-                        entitiesUniqueFields.map(({ field }) => field).join(",")
-                    );
-                }
-
-                if (where) {
-                    const updatables = await super.count(where, options);
-                    if (updatables.count > 1) {
-                        throw new EntityUniqueConflictError(
-                            this.entityClass,
-                            entitiesUniqueFields
-                                .map(({ field }) => field)
-                                .join(",")
-                        );
-                    }
-                }
-            };
-
+        class MixedRepository extends superClass {
             /**
              * Check entities unique fields
-             * and set `uid`, `beginDate`, `endDate`, `id` to undefined
+             * then set `uid`, `beginDate`, `endDate`, `id` to undefined
              * then create entities
              */
             createAll = async (
@@ -169,7 +124,7 @@ export function HistoryRepositoryMixin<
                     return super.createAll(entities, options);
                 }
 
-                await this.isUnique(entities, undefined, options);
+                await isUnique(this, entities, undefined, options);
 
                 return await super.createAll(
                     entities.map((entity) => ({
@@ -184,7 +139,9 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * History create() using createAll()
+             * Check entity unique fields
+             * then set `uid`, `beginDate`, `endDate`, `id` to undefined
+             * then create entity
              */
             create = async (
                 entity: DataObject<T>,
@@ -194,9 +151,18 @@ export function HistoryRepositoryMixin<
                     return super.create(entity, options);
                 }
 
-                const result = await this.createAll([entity], options);
+                await isUnique(this, [entity], undefined, options);
 
-                return result[0];
+                return await super.create(
+                    {
+                        ...entity,
+                        uid: undefined,
+                        beginDate: undefined,
+                        endDate: undefined,
+                        id: undefined,
+                    },
+                    options
+                );
             };
 
             /**
@@ -222,29 +188,7 @@ export function HistoryRepositoryMixin<
             };
 
             /**
-             * Find one entity by filter and {endDate: null}
-             */
-            findOne = async (filter?: Filter<T>, options?: HistoryOptions) => {
-                if (options && options.all) {
-                    return super.findOne(filter, options);
-                }
-
-                return await super.findOne(
-                    {
-                        ...filter,
-                        where: {
-                            and: [
-                                { endDate: null },
-                                filter?.where as any,
-                            ].filter((condition) => condition),
-                        },
-                    },
-                    options
-                );
-            };
-
-            /**
-             * History findById() using findOne()
+             * Find one entity by filter and {id: id, endDate: null}
              */
             findById = async (
                 id: string,
@@ -255,7 +199,7 @@ export function HistoryRepositoryMixin<
                     return super.findById(id, filter, options);
                 }
 
-                const result = await this.findOne(
+                const result = await this.find(
                     {
                         ...filter,
                         where: this.entityClass.buildWhereForId(id),
@@ -263,8 +207,8 @@ export function HistoryRepositoryMixin<
                     options
                 );
 
-                if (result) {
-                    return result;
+                if (result[0]) {
+                    return result[0];
                 } else {
                     throw new EntityNotFoundError(this.entityClass, id);
                 }
@@ -319,7 +263,8 @@ export function HistoryRepositoryMixin<
                     return super.updateAll(data, where, options);
                 }
 
-                await this.isUnique(
+                await isUnique(
+                    this,
                     [data],
                     {
                         and: [{ endDate: null }, where as any].filter(

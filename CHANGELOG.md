@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/loopback4/loopback-component-history/compare/1.1.0...1.1.1) (2021-09-12)
+
+
+### Bug Fixes
+
+* change package.json scripts ([3b8cb78](https://github.com/loopback4/loopback-component-history/commit/3b8cb7807cc286a6b7ed917f386fd2a9a32b63a0))
+
 # [1.1.0](https://github.com/loopback4/loopback-component-history/compare/1.0.1...1.1.0) (2021-09-12)
 
 

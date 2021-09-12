@@ -1,3 +1,10 @@
+# [1.2.0-next.1](https://github.com/loopback4/loopback-component-history/compare/1.1.1...1.2.0-next.1) (2021-09-12)
+
+
+### Features
+
+* **fossabot:** add license scan badge ([c66466d](https://github.com/loopback4/loopback-component-history/commit/c66466d3c1f0c2a30ac98610e6ecdbbb93e3c066))
+
 ## [1.1.1](https://github.com/loopback4/loopback-component-history/compare/1.1.0...1.1.1) (2021-09-12)
 
 

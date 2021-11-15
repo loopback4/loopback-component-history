@@ -1,3 +1,10 @@
+# [1.2.0-next.3](https://github.com/loopback4/loopback-component-history/compare/1.2.0-next.2...1.2.0-next.3) (2021-11-15)
+
+
+### Bug Fixes
+
+* **CI:** merge request, release workflows into one CI/CD workflow ([392e90d](https://github.com/loopback4/loopback-component-history/commit/392e90d38891bf4b584743f414402ae903922c6e))
+
 # [1.2.0-next.2](https://github.com/loopback4/loopback-component-history/compare/1.2.0-next.1...1.2.0-next.2) (2021-09-12)
 
 
